@@ -1,0 +1,71 @@
+# .NET build artifacts
+bin/
+obj/
+out/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.user
+*.suo
+*.tmp
+*.dbmdl
+*.bak
+*.ldf
+*.mdf
+
+# Visual Studio
+.vs/
+*.vscode/
+*.userosscache/
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+*.lock.json
+
+# Entity Framework
+Migrations/
+
+# Logs
+logs/
+*.log
+*.tld
+*.blg
+
+# Secrets
+secrets.json
+appsettings.*.local.json
+appsettings.Development.json
+
+# Docker
+mssql_data/
+docker-compose.override.yml
+*.env
+
+# Test results
+TestResults/
+*.coverage
+*.coveragexml
+
+# Node (if frontend grows later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Publish
+publish/
+*.Publish.xml
