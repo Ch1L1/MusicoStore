@@ -1,0 +1,46 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MusicoStore</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: .5rem;
+        }
+    </style>
+</head>
+<body>
+    <h2>MusicoStore</h2>
+    <button onclick="load()">Load Products</button>
+    <table>
+        <thead><tr><th>Name</th><th>Description</th><th>Price</th></tr></thead>
+        <tbody id="rows"></tbody>
+    </table>
+    <script>
+    async function load(){
+      const res = await fetch('/api/v1/products');
+      const data = await res.json();
+      const rows = document.getElementById('rows');
+      rows.innerHTML = '';
+      data.forEach(p=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.name}</td><td>${p.description}</td><td>${p.currentPrice.toFixed(2)} ${p.currencyCode}</td>`;
+        rows.appendChild(tr);
+      });
+    }
+    load();
+    </script>
+</body>
+</html>
