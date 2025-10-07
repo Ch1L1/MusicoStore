@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MusicoStore.Domain.Entities;
 
 public class Product : BaseEntity
@@ -7,4 +9,7 @@ public class Product : BaseEntity
     public decimal CurrentPrice { get; set; }
     public string CurrencyCode { get; set; } = "USD";
     public int ProductCategoryId { get; set; }
+
+    [ForeignKey(nameof(ProductCategoryId))]
+    public virtual ProductCategory? ProductCategory { get; set; }
 }
