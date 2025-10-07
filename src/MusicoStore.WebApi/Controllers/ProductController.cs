@@ -1,4 +1,6 @@
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.Application.DTOs;
 using MusicoStore.Application.Interfaces.IRepositories;
 using MusicoStore.Domain.Entities;
 
@@ -10,11 +12,19 @@ public class ProductsController(IProductRepository repo) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await repo.GetAllAsync(ct));
+    {
+        var products = await repo.GetAllAsync(ct);
+        return Ok(products.Adapt<List<ProductDto>>());
+    }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id, CancellationToken ct)
-        => (await repo.GetAsync(id, ct)) is { } p ? Ok(p) : NotFound();
+    {
+        var product = await repo.GetAsync(id, ct);
+        if (product == null) return NotFound();
+
+        return Ok(product.Adapt<ProductDto>());
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(Product dto, CancellationToken ct)
