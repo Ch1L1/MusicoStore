@@ -7,10 +7,10 @@ namespace MusicoStore.Infrastructure.Persistence.Repositories;
 public class ProductRepository(AppDbContext db) : IProductRepository
 {
     public async Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken ct)
-        => await db.Products.AsNoTracking().ToListAsync(ct);
+        => await db.Products.Include(p => p.ProductCategory).AsNoTracking().ToListAsync(ct);
 
     public Task<Product?> GetAsync(int id, CancellationToken ct)
-        => db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+        => db.Products.Include(p => p.ProductCategory).AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
 
     public async Task<Product> AddAsync(Product product, CancellationToken ct)
     {
