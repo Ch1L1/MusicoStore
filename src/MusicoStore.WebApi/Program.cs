@@ -26,6 +26,7 @@ if (app.Environment.IsDevelopment())
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+app.UseTokenAuth();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.MapControllers();
