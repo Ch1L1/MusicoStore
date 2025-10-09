@@ -1,6 +1,6 @@
 using MusicoStore.Domain.Entities;
 
-namespace MusicoStore.Application.Interfaces.IRepositories;
+namespace MusicoStore.Application.Abstractions.Interfaces;
 
 public interface IProductRepository
 {

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicoStore.Application.Abstractions.Interfaces;
-using MusicoStore.Application.Interfaces.IRepositories;
 using MusicoStore.Domain.Entities;
 
 namespace MusicoStore.WebApi.Controllers;

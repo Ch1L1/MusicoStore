@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using MusicoStore.Application.Interfaces.IRepositories;
+using MusicoStore.Application.Abstractions.Interfaces;
 using MusicoStore.Domain.Entities;
 
 namespace MusicoStore.Infrastructure.Persistence.Repositories;

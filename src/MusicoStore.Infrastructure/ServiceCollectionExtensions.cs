@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MusicoStore.Application.Abstractions.Interfaces;
-using MusicoStore.Application.Interfaces.IRepositories;
 using MusicoStore.Infrastructure.Persistence;
 using MusicoStore.Infrastructure.Persistence.Repositories;
 

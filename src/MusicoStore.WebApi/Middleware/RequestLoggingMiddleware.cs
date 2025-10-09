@@ -1,8 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-
 namespace MusicoStore.WebApi.Middleware;
 
 public class RequestLoggingMiddleware
