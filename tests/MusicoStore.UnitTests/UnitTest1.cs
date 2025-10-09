@@ -1,4 +1,4 @@
-﻿namespace MusicoStore.UnitTests;
+namespace MusicoStore.UnitTests;
 
 public class UnitTest1
 {

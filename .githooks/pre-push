@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+echo "Running dotnet format for MusicoStore.sln..."
+dotnet format MusicoStore.sln --no-restore
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Code was formatted automatically. Committing changes..."
+  git add .
+  git commit -m "style: automatic pre-push code formatting" >/dev/null 2>&1 || true
+fi
+
+echo "Continuing with push..."
+exit 0
