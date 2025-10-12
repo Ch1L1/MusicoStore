@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
+using MusicoStore.DataAccessLayer;
 using MusicoStore.Infrastructure;
-using MusicoStore.Infrastructure.Persistence;
-using MusicoStore.Infrastructure.Persistence.Seed;
 using MusicoStore.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);

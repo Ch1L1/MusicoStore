@@ -1,17 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\MusicoStore.Domain\MusicoStore.Domain.csproj" />
-    <ProjectReference Include="..\MusicoStore.Application\MusicoStore.Application.csproj" />
+    <ProjectReference Include="..\MusicoStore.DataAccessLayer\MusicoStore.DataAccessLayer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
     <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
   </ItemGroup>
