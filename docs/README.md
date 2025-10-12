@@ -77,9 +77,9 @@ MusicoStore/ <br />
 
 ## Documentation
 
-- **[Technical Overview](./README.md)** - Everything you need to know
-- **[Use Case Diagram](./diagrams/use-case-diagram.png)** - System use cases
-- **[ERD Diagram](./diagrams/erd-diagram.png)** - Database schema
+- **[Technical Overview](docs/README.md)** - Everything you need to know
+- **[Use Case Diagram](docs/diagrams/use_case_diagram.png)** - System use cases
+- **[ERD Diagram](docs/diagrams/ER_diagram.png)** - Database schema
 
 ## Technology Stack
 
