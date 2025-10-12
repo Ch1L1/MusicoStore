@@ -34,7 +34,11 @@ dotnet run --project src/MusicoStore.WebApi
 SA_PASSWORD=???
 DB_PORT=1433
 ```
-2) Start the Database container with docker:  
+2) For macOS (Apple Silicon), synchronise the passwords from `.env` in `appsetings.json` in `LocalMacOSConnection` string:
+```
+ "LocalMacOSConnection": "Server=localhost,1433;Database=MusicoStoreDb;User Id=sa;Password=???;TrustServerCertificate=True"
+```
+3) Start the Database container with docker:  
    - Windows/Linux:
      ```bash
      docker compose up -d
@@ -43,9 +47,6 @@ DB_PORT=1433
      ```bash
      docker compose -f docker-compose-macos.yml up -d
      ```
-3) Ensure `src/MusicoStore.WebApi/appsettings.json` uses:
-   - Windows default LocalDB (OK), **or**
-   - Mac/Linux Docker connection string: `LocalMacOSConnection`
 4) Run the API:
 ```bash
 dotnet run --project src/MusicoStore.WebApi
@@ -59,8 +60,6 @@ MusicoStore/ <br />
 │  ├─ MusicoStore.WebApi/            # Controllers, Middleware, wwwroot (mini UI) <br />
 │  ├─ MusicoStore.Infrastructure/    # DI wiring, repositories <br /> 
 │  └─ MusicoStore.DataAccessLayer/   # EF Core DbContext, entities, seed data <br />
-├─ tests/ <br />
-│  └─ MusicoStore.IntegrationTests/  # (scaffolded) <br />
 ├─ docs/ <br />
 │  └─ diagrams/                      # ER & Use-case images <br />
 ├─ docker-compose.yml                # SQL Server (Windows/Linux) <br />
@@ -78,9 +77,9 @@ MusicoStore/ <br />
 
 ## Documentation
 
-- **[Technical Overview](docs/README.md)** - Everything you need to know
-- **[Use Case Diagram](docs/diagrams/use-case-diagram.png)** - System use cases
-- **[ERD Diagram](docs/diagrams/erd-diagram.png)** - Database schema
+- **[Technical Overview](./README.md)** - Everything you need to know
+- **[Use Case Diagram](./diagrams/use-case-diagram.png)** - System use cases
+- **[ERD Diagram](./diagrams/erd-diagram.png)** - Database schema
 
 ## Technology Stack
 
@@ -88,7 +87,6 @@ MusicoStore/ <br />
 - **ORM:** EF Core 9
 - **Database:** SQL Server 2022 (Docker) or LocalDB (Windows)
 - **API Docs:** Swagger/OpenAPI
-- **Testing:** xUnit (scaffolded)
 
 ## Technical Overview
 
