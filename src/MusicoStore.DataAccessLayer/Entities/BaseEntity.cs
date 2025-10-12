@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MusicoStore.Domain.Entities;
+namespace MusicoStore.DataAccessLayer.Entities;
 
 public class BaseEntity
 {

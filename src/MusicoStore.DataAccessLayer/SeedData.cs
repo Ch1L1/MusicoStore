@@ -1,6 +1,6 @@
-using MusicoStore.Domain.Entities;
+using MusicoStore.DataAccessLayer.Entities;
 
-namespace MusicoStore.Infrastructure.Persistence.Seed;
+namespace MusicoStore.DataAccessLayer;
 
 public static class SeedData
 {

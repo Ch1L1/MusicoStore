@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicoStore.Domain.Entities;
+namespace MusicoStore.DataAccessLayer.Entities;
 
 public class Product : BaseEntity
 {

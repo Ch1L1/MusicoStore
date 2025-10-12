@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using MusicoStore.Domain.Entities;
+using MusicoStore.DataAccessLayer.Entities;
 
-namespace MusicoStore.Infrastructure.Persistence;
+namespace MusicoStore.DataAccessLayer;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
