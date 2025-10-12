@@ -12,4 +12,8 @@ public class Product : BaseEntity
 
     [ForeignKey(nameof(ProductCategoryId))]
     public virtual ProductCategory? ProductCategory { get; set; }
+    public int ManufacturerId { get; set; }
+
+    [ForeignKey(nameof(ManufacturerId))]
+    public virtual Manufacturer? Manufacturer { get; set; }
 }

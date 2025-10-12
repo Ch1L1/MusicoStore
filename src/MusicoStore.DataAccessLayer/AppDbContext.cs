@@ -5,8 +5,10 @@ namespace MusicoStore.DataAccessLayer;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Product> Products { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
+    public DbSet<Address> Addresses { get; set; }
+    public DbSet<Manufacturer> Manufacturers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -19,7 +21,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(p => p.Description).HasMaxLength(300).IsRequired();
             e.Property(p => p.CurrentPrice).HasColumnType("decimal(12,2)").IsRequired();
             e.Property(p => p.CurrencyCode).HasMaxLength(3).IsRequired().HasDefaultValue("USD");
-            e.Property(p => p.ProductCategoryId).IsRequired();
+            e.HasOne(p => p.ProductCategory)
+                .WithMany(p => p.Products)
+                .HasForeignKey(p => p.ProductCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(p => p.Manufacturer)
+                .WithMany(p => p.Products)
+                .HasForeignKey(p => p.ManufacturerId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         b.Entity<ProductCategory>(e =>
@@ -27,6 +36,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.ToTable("ProductCategory");
             e.HasKey(c => c.Id);
             e.Property(c => c.Name).HasMaxLength(50).IsRequired();
+        });
+
+
+
+        b.Entity<Address>(e =>
+        {
+            e.ToTable("Address");
+            e.HasKey(a => a.Id);
+            e.Property(a => a.StreetName).HasMaxLength(50).IsRequired();
+            e.Property(a => a.StreetNumber).HasMaxLength(20).IsRequired();
+            e.Property(a => a.City).HasMaxLength(50).IsRequired();
+            e.Property(a => a.PostalNumber).HasMaxLength(6).IsRequired();
+            e.Property(a => a.CountryCode).HasMaxLength(3).IsRequired();
+        });
+
+        b.Entity<Manufacturer>(e =>
+        {
+            e.ToTable("Manufacturer");
+            e.HasKey(m => m.Id);
+            e.Property(m => m.Name).HasMaxLength(50).IsRequired();
         });
     }
 }

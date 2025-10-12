@@ -7,4 +7,5 @@ public class ProductModel
     public decimal CurrentPrice { get; set; }
     public string CurrencyCode { get; set; }
     public int ProductCategoryId { get; set; }
+    public int ManufacturerId { get; set; }
 }
