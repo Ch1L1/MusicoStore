@@ -7,83 +7,84 @@ namespace MusicoStore.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ProductCategoryController(IRepository<ProductCategory> categoryRepository) : ControllerBase
+public class ManufacturerController(IRepository<Manufacturer> manufacturerRepository) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        IReadOnlyList<ProductCategory> categories = await categoryRepository.GetAllAsync(ct);
-        return Ok(categories.Select(c => new
+        IReadOnlyList<Manufacturer> manufacturers = await manufacturerRepository.GetAllAsync(ct);
+        return Ok(manufacturers.Select(m => new
         {
-            CategoryId = c.Id,
-            c.Name,
-            Products = c.Products?.Select(p => new
+            ManufacturerId = m.Id,
+            m.Address,
+            Products = m.Products?.Select(p => new
             {
                 ProductId = p.Id,
                 p.Name,
                 p.Description,
                 p.CurrentPrice,
                 p.CurrencyCode,
-                ManufacturerName = p.Manufacturer?.Name
+                CategoryName = p.ProductCategory?.Name
             })
         }));
     }
 
-
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        ProductCategory? category = await categoryRepository.GetByIdAsync(id, ct);
-        if (category == null)
+        Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
+        if (manufacturer == null)
         {
             return NotFound();
         }
 
         return Ok(new
         {
-            CategoryId = category.Id,
-            category.Name,
-            Products = category.Products?.Select(p => new
+            ManufacturerId = manufacturer.Id,
+            manufacturer.Address,
+            Products = manufacturer.Products?.Select(p => new
             {
                 ProductId = p.Id,
                 p.Name,
                 p.Description,
                 p.CurrentPrice,
                 p.CurrencyCode,
-                ManufacturerName = p.Manufacturer?.Name
+                CategoryName = p.ProductCategory?.Name
             })
         });
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProductCategoryModel model, CancellationToken ct)
+    public async Task<IActionResult> Create(ManufacturerModel model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var productCategory = new ProductCategory
+        var manufacturer = new Manufacturer
         {
-            Name = model.Name
+            Name = model.Name,
+            AddressId = model.AddressId
         };
 
-        ProductCategory created = await categoryRepository.AddAsync(productCategory, ct);
+        Manufacturer created = await manufacturerRepository.AddAsync(manufacturer, ct);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, ProductCategoryModel model, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, ManufacturerModel model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        await categoryRepository.UpdateAsync(new ProductCategory
+        await manufacturerRepository.UpdateAsync(new Manufacturer
         {
             Id = id,
-            Name = model.Name
+            Name = model.Name,
+            AddressId = model.AddressId
         }, ct);
         return NoContent();
     }
@@ -91,13 +92,13 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        ProductCategory? category = await categoryRepository.GetByIdAsync(id, ct);
-        if (category == null)
+        Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
+        if (manufacturer == null)
         {
-            return NotFound($"Category with id: \'{id}\' not found");
+            return NotFound();
         }
 
-        await categoryRepository.DeleteAsync(id, ct);
+        await manufacturerRepository.DeleteAsync(id, ct);
         return NoContent();
     }
 }

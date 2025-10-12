@@ -7,13 +7,33 @@ namespace MusicoStore.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ProductsController(IRepository<Product> productRepository) : ControllerBase
+public class ProductsController(ProductRepository productRepository) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> Filter(
+        string? name,
+        string? desc,
+        decimal? priceMax,
+        string? category,
+        string? manufacturer,
+        CancellationToken ct)
     {
-        IReadOnlyList<Product> products = await productRepository.GetAllAsync(ct);
-        return Ok(products.Select(p => new
+        IReadOnlyList<Product> products;
+
+        if (string.IsNullOrEmpty(name)
+            && string.IsNullOrEmpty(desc)
+            && priceMax == null
+            && string.IsNullOrEmpty(category)
+            && string.IsNullOrEmpty(manufacturer))
+        {
+            products = await productRepository.GetAllAsync(ct);
+        }
+        else
+        {
+            products = await productRepository.FilterAsync(name, desc, priceMax, category, manufacturer, ct);
+        }
+
+        var result = products.Select(p => new
         {
             ProductId = p.Id,
             p.Name,
@@ -23,10 +43,18 @@ public class ProductsController(IRepository<Product> productRepository) : Contro
             Category = new
             {
                 CategoryId = p.ProductCategory?.Id,
-                CategoryName = p.ProductCategory?.Name,
+                CategoryName = p.ProductCategory?.Name
+            },
+            Manufacturer = new
+            {
+                ManufacturerId = p.Manufacturer?.Id,
+                ManufacturerName = p.Manufacturer?.Name
             }
-        }));
+        });
+
+        return Ok(result);
     }
+
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
@@ -48,6 +76,11 @@ public class ProductsController(IRepository<Product> productRepository) : Contro
             {
                 CategoryId = product.ProductCategory?.Id,
                 CategoryName = product.ProductCategory?.Name,
+            },
+            Manufacturer = new
+            {
+                ManufacturerId = product.Manufacturer?.Id,
+                ManufacturerName = product.Manufacturer?.Name
             }
         });
     }
@@ -66,7 +99,8 @@ public class ProductsController(IRepository<Product> productRepository) : Contro
             Description = model.Description,
             CurrentPrice = model.CurrentPrice,
             CurrencyCode = model.CurrencyCode,
-            ProductCategoryId = model.ProductCategoryId
+            ProductCategoryId = model.ProductCategoryId,
+            ManufacturerId = model.ManufacturerId
         };
 
         Product created = await productRepository.AddAsync(product, ct);
@@ -87,7 +121,8 @@ public class ProductsController(IRepository<Product> productRepository) : Contro
             Description = model.Description,
             CurrentPrice = model.CurrentPrice,
             CurrencyCode = model.CurrencyCode,
-            ProductCategoryId = model.ProductCategoryId
+            ProductCategoryId = model.ProductCategoryId,
+            ManufacturerId = model.ManufacturerId
         }, ct);
         return NoContent();
     }

@@ -9,12 +9,14 @@ public class ProductCategoryRepository(AppDbContext db) : IRepository<ProductCat
     public async Task<IReadOnlyList<ProductCategory>> GetAllAsync(CancellationToken ct)
         => await db.ProductCategories
             .Include(c => c.Products)
+                .ThenInclude(p => p.Manufacturer)
             .AsNoTracking()
             .ToListAsync(ct);
 
     public async Task<ProductCategory?> GetByIdAsync(int id, CancellationToken ct)
         => await db.ProductCategories
             .Include(c => c.Products)
+                .ThenInclude(p => p.Manufacturer)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
