@@ -5,9 +5,7 @@ using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class ProductCategoryController(IRepository<ProductCategory> categoryRepository) : ControllerBase
+public class ProductCategoryController(IRepository<ProductCategory> categoryRepository) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
@@ -28,7 +26,6 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
             })
         }));
     }
-
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
@@ -94,7 +91,7 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
         ProductCategory? category = await categoryRepository.GetByIdAsync(id, ct);
         if (category == null)
         {
-            return NotFound($"Category with id: \'{id}\' not found");
+            return NotFound($"Category with id: '{id}' not found");
         }
 
         await categoryRepository.DeleteAsync(id, ct);

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MusicoStore.DataAccessLayer;
 using MusicoStore.DataAccessLayer.Entities;
+using MusicoStore.Infrastructure.Models;
 
 namespace MusicoStore.Infrastructure.Repository;
 
@@ -14,11 +15,7 @@ public class ProductRepository(AppDbContext db) : IRepository<Product>
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Product>> FilterAsync(
-        string? name,
-        string? desc,
-        decimal? priceMax,
-        string? category,
-        string? manufacturer,
+        ProductFilterCriteria filter,
         CancellationToken ct)
     {
         IQueryable<Product> query = db.Products
@@ -26,29 +23,29 @@ public class ProductRepository(AppDbContext db) : IRepository<Product>
             .Include(p => p.Manufacturer)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(name))
+        if (!string.IsNullOrEmpty(filter.Name))
         {
-            query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+            query = query.Where(p => p.Name.ToLower().Contains(filter.Name.ToLower()));
         }
 
-        if (!string.IsNullOrEmpty(desc))
+        if (!string.IsNullOrEmpty(filter.Description))
         {
-            query = query.Where(p => p.Description.ToLower().Contains(desc.ToLower()));
+            query = query.Where(p => p.Description.ToLower().Contains(filter.Description.ToLower()));
         }
 
-        if (priceMax != null)
+        if (filter.MaxPrice.HasValue)
         {
-            query = query.Where(p => p.CurrentPrice <= priceMax);
+            query = query.Where(p => p.CurrentPrice <= filter.MaxPrice.Value);
         }
 
-        if (!string.IsNullOrEmpty(category))
+        if (!string.IsNullOrEmpty(filter.Category))
         {
-            query = query.Where(p => p.ProductCategory!.Name.ToLower() == category.ToLower());
+            query = query.Where(p => p.ProductCategory!.Name.ToLower() == filter.Category.ToLower());
         }
 
-        if (!string.IsNullOrEmpty(manufacturer))
+        if (!string.IsNullOrEmpty(filter.Manufacturer))
         {
-            query = query.Where(p => p.Manufacturer!.Name.ToLower() == manufacturer.ToLower());
+            query = query.Where(p => p.Manufacturer!.Name.ToLower() == filter.Manufacturer.ToLower());
         }
 
         return await query

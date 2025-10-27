@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MusicoStore.DataAccessLayer.Entities;
+using MusicoStore.DataAccessLayer.Enums;
 
 namespace MusicoStore.DataAccessLayer;
 
@@ -20,7 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(p => p.Name).HasMaxLength(50).IsRequired();
             e.Property(p => p.Description).HasMaxLength(300).IsRequired();
             e.Property(p => p.CurrentPrice).HasColumnType("decimal(12,2)").IsRequired();
-            e.Property(p => p.CurrencyCode).HasMaxLength(3).IsRequired().HasDefaultValue("USD");
+            e.Property(p => p.CurrencyCode).HasConversion<String>().HasMaxLength(3).IsRequired().HasDefaultValue(Currency.USD);
             e.HasOne(p => p.ProductCategory)
                 .WithMany(p => p.Products)
                 .HasForeignKey(p => p.ProductCategoryId)

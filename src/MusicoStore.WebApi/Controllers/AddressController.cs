@@ -5,9 +5,7 @@ using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class AddressController(IRepository<Address> addressRepository) : ControllerBase
+public class AddressController(IRepository<Address> addressRepository) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)

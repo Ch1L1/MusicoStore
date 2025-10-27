@@ -1,37 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicoStore.DataAccessLayer.Entities;
+using MusicoStore.Infrastructure.Models;
 using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class ProductsController(ProductRepository productRepository) : ControllerBase
+public class ProductsController(ProductRepository productRepository) : ApiControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Filter(
-        string? name,
-        string? desc,
-        decimal? priceMax,
-        string? category,
-        string? manufacturer,
-        CancellationToken ct)
+    public async Task<IActionResult> Filter([FromQuery] ProductFilterRequest request, CancellationToken ct)
     {
-        IReadOnlyList<Product> products;
+        var criteria = new ProductFilterCriteria
+        {
+            Name = request.Name,
+            Description = request.Description,
+            MaxPrice = request.MaxPrice,
+            Category = request.Category,
+            Manufacturer = request.Manufacturer
+        };
 
-        if (string.IsNullOrEmpty(name)
-            && string.IsNullOrEmpty(desc)
-            && priceMax == null
-            && string.IsNullOrEmpty(category)
-            && string.IsNullOrEmpty(manufacturer))
-        {
-            products = await productRepository.GetAllAsync(ct);
-        }
-        else
-        {
-            products = await productRepository.FilterAsync(name, desc, priceMax, category, manufacturer, ct);
-        }
+        IReadOnlyList<Product> products = await productRepository.FilterAsync(criteria, ct);
 
         var result = products.Select(p => new
         {
@@ -62,7 +51,7 @@ public class ProductsController(ProductRepository productRepository) : Controlle
         Product? product = await productRepository.GetByIdAsync(id, ct);
         if (product == null)
         {
-            return NotFound();
+            return NotFound($"Product with id '{id}' not found");
         }
 
         return Ok(new
@@ -133,7 +122,7 @@ public class ProductsController(ProductRepository productRepository) : Controlle
         Product? product = await productRepository.GetByIdAsync(id, ct);
         if (product == null)
         {
-            return NotFound($"Product with id: \'{id}\' not found");
+            return NotFound($"Product with id '{id}' not found");
         }
 
         await productRepository.DeleteAsync(id, ct);
