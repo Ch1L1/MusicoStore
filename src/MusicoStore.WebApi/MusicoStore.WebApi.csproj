@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MusicoStore.Infrastructure\MusicoStore.Infrastructure.csproj" />
+    <ProjectReference Include="..\MusicoStore.DataAccessLayer\MusicoStore.DataAccessLayer.csproj" />
   </ItemGroup>
 
 </Project>

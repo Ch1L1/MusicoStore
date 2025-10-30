@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
@@ -28,7 +28,7 @@ public class AddressController(IRepository<Address> addressRepository) : ApiCont
         Address? address = await addressRepository.GetByIdAsync(id, ct);
         if (address == null)
         {
-            return NotFound();
+            return NotFound($"Address with id '{id}' not found");
         }
 
         return Ok(new
@@ -69,7 +69,7 @@ public class AddressController(IRepository<Address> addressRepository) : ApiCont
         Address? address = await addressRepository.GetByIdAsync(id, ct);
         if (address == null)
         {
-            return NotFound();
+            return NotFound($"Address with id '{id}' not found");
         }
 
         await addressRepository.DeleteAsync(id, ct);

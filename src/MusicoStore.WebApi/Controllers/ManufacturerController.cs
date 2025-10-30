@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
@@ -33,7 +33,7 @@ public class ManufacturerController(IRepository<Manufacturer> manufacturerReposi
         Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
         if (manufacturer == null)
         {
-            return NotFound();
+            return NotFound($"Manufacturer with id '{id}' not found");
         }
 
         return Ok(new
@@ -93,7 +93,7 @@ public class ManufacturerController(IRepository<Manufacturer> manufacturerReposi
         Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
         if (manufacturer == null)
         {
-            return NotFound();
+            return NotFound($"Manufacturer with id '{id}' not found");
         }
 
         await manufacturerRepository.DeleteAsync(id, ct);

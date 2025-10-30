@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using MusicoStore.DataAccessLayer;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Models;
+using MusicoStore.DataAccessLayer.Models;
 
-namespace MusicoStore.Infrastructure.Repository;
+namespace MusicoStore.DataAccessLayer.Repository;
 
 public class ProductRepository(AppDbContext db) : IRepository<Product>
 {

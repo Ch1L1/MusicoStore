@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicoStore.Infrastructure", "src\MusicoStore.Infrastructure\MusicoStore.Infrastructure.csproj", "{63BE5C65-01FD-4927-80C9-2897DD026126}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicoStore.WebApi", "src\MusicoStore.WebApi\MusicoStore.WebApi.csproj", "{02F3950F-597A-474F-B443-1E841780975A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicoStore.DataAccessLayer", "src\MusicoStore.DataAccessLayer\MusicoStore.DataAccessLayer.csproj", "{FD49DB7E-7C4E-4A2F-8E39-D7CB1128AC3E}"
@@ -21,18 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|x64.Build.0 = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Debug|x86.Build.0 = Debug|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|Any CPU.Build.0 = Release|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|x64.ActiveCfg = Release|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|x64.Build.0 = Release|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|x86.ActiveCfg = Release|Any CPU
-		{63BE5C65-01FD-4927-80C9-2897DD026126}.Release|x86.Build.0 = Release|Any CPU
 		{02F3950F-597A-474F-B443-1E841780975A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{02F3950F-597A-474F-B443-1E841780975A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02F3950F-597A-474F-B443-1E841780975A}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -62,7 +48,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{63BE5C65-01FD-4927-80C9-2897DD026126} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{02F3950F-597A-474F-B443-1E841780975A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{FD49DB7E-7C4E-4A2F-8E39-D7CB1128AC3E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection

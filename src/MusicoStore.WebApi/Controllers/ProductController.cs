@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Models;
-using MusicoStore.Infrastructure.Repository;
+using MusicoStore.DataAccessLayer.Models;
+using MusicoStore.DataAccessLayer.Repository;
 using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;

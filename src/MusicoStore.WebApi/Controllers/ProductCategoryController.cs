@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
 
 namespace MusicoStore.WebApi.Controllers;
@@ -33,7 +33,7 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
         ProductCategory? category = await categoryRepository.GetByIdAsync(id, ct);
         if (category == null)
         {
-            return NotFound();
+            return NotFound($"Category with id '{id}' not found");
         }
 
         return Ok(new
@@ -91,7 +91,7 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
         ProductCategory? category = await categoryRepository.GetByIdAsync(id, ct);
         if (category == null)
         {
-            return NotFound($"Category with id: '{id}' not found");
+            return NotFound($"Category with id '{id}' not found");
         }
 
         await categoryRepository.DeleteAsync(id, ct);

@@ -1,4 +1,4 @@
-namespace MusicoStore.Infrastructure.Models;
+namespace MusicoStore.DataAccessLayer.Models;
 
 public class ProductFilterCriteria
 {

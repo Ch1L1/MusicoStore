@@ -11,8 +11,8 @@ public static class SeedData
         await db.Database.EnsureCreatedAsync();
 
         if (db.Products.Any())
-        { 
-            return; 
+        {
+            return;
         }
 
         // Addresses
