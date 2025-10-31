@@ -2,29 +2,19 @@ using Microsoft.AspNetCore.Mvc;
 using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
 using MusicoStore.WebApi.Models;
+using AutoMapper;
+using MusicoStore.WebApi.Models.Dtos;
 
 namespace MusicoStore.WebApi.Controllers;
 
-public class ProductCategoryController(IRepository<ProductCategory> categoryRepository) : ApiControllerBase
+public class ProductCategoryController(IRepository<ProductCategory> categoryRepository, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         IReadOnlyList<ProductCategory> categories = await categoryRepository.GetAllAsync(ct);
-        return Ok(categories.Select(c => new
-        {
-            CategoryId = c.Id,
-            c.Name,
-            Products = c.Products?.Select(p => new
-            {
-                ProductId = p.Id,
-                p.Name,
-                p.Description,
-                p.CurrentPrice,
-                p.CurrencyCode,
-                ManufacturerName = p.Manufacturer?.Name
-            })
-        }));
+        var result = mapper.Map<IEnumerable<ProductCategoryDto>>(categories);
+        return Ok(result);
     }
 
     [HttpGet("{id:int}")]
@@ -36,20 +26,8 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
             return NotFound($"Category with id '{id}' not found");
         }
 
-        return Ok(new
-        {
-            CategoryId = category.Id,
-            category.Name,
-            Products = category.Products?.Select(p => new
-            {
-                ProductId = p.Id,
-                p.Name,
-                p.Description,
-                p.CurrentPrice,
-                p.CurrencyCode,
-                ManufacturerName = p.Manufacturer?.Name
-            })
-        });
+        var dto = mapper.Map<ProductCategoryDto>(category);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -66,7 +44,8 @@ public class ProductCategoryController(IRepository<ProductCategory> categoryRepo
         };
 
         ProductCategory created = await categoryRepository.AddAsync(productCategory, ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var dto = mapper.Map<ProductCategoryDto>(created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
     }
 
     [HttpPut("{id:int}")]

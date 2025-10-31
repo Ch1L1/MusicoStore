@@ -3,10 +3,12 @@ using MusicoStore.DataAccessLayer.Entities;
 using MusicoStore.DataAccessLayer.Models;
 using MusicoStore.DataAccessLayer.Repository;
 using MusicoStore.WebApi.Models;
+using AutoMapper;
+using MusicoStore.WebApi.Models.Dtos;
 
 namespace MusicoStore.WebApi.Controllers;
 
-public class ProductsController(ProductRepository productRepository) : ApiControllerBase
+public class ProductsController(ProductRepository productRepository, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Filter([FromQuery] ProductFilterRequest request, CancellationToken ct)
@@ -22,25 +24,7 @@ public class ProductsController(ProductRepository productRepository) : ApiContro
 
         IReadOnlyList<Product> products = await productRepository.FilterAsync(criteria, ct);
 
-        var result = products.Select(p => new
-        {
-            ProductId = p.Id,
-            p.Name,
-            p.Description,
-            p.CurrentPrice,
-            p.CurrencyCode,
-            Category = new
-            {
-                CategoryId = p.ProductCategory?.Id,
-                CategoryName = p.ProductCategory?.Name
-            },
-            Manufacturer = new
-            {
-                ManufacturerId = p.Manufacturer?.Id,
-                ManufacturerName = p.Manufacturer?.Name
-            }
-        });
-
+        var result = mapper.Map<IEnumerable<ProductDto>>(products);
         return Ok(result);
     }
 
@@ -54,24 +38,8 @@ public class ProductsController(ProductRepository productRepository) : ApiContro
             return NotFound($"Product with id '{id}' not found");
         }
 
-        return Ok(new
-        {
-            ProductId = product.Id,
-            product.Name,
-            product.Description,
-            product.CurrentPrice,
-            product.CurrencyCode,
-            Category = new
-            {
-                CategoryId = product.ProductCategory?.Id,
-                CategoryName = product.ProductCategory?.Name,
-            },
-            Manufacturer = new
-            {
-                ManufacturerId = product.Manufacturer?.Id,
-                ManufacturerName = product.Manufacturer?.Name
-            }
-        });
+        var dto = mapper.Map<ProductDto>(product);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -93,7 +61,8 @@ public class ProductsController(ProductRepository productRepository) : ApiContro
         };
 
         Product created = await productRepository.AddAsync(product, ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var dto = mapper.Map<ProductDto>(created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
     }
 
     [HttpPut("{id:int}")]
