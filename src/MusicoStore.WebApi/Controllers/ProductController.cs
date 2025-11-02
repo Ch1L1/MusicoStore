@@ -1,57 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
+using MusicoStore.DataAccessLayer.Models;
+using MusicoStore.DataAccessLayer.Repository;
 using MusicoStore.WebApi.Models;
+using AutoMapper;
+using MusicoStore.WebApi.Models.Dtos;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class ProductsController(ProductRepository productRepository) : ControllerBase
+public class ProductsController(ProductRepository productRepository, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Filter(
-        string? name,
-        string? desc,
-        decimal? priceMax,
-        string? category,
-        string? manufacturer,
-        CancellationToken ct)
+    public async Task<IActionResult> Filter([FromQuery] ProductFilterRequest request, CancellationToken ct)
     {
-        IReadOnlyList<Product> products;
-
-        if (string.IsNullOrEmpty(name)
-            && string.IsNullOrEmpty(desc)
-            && priceMax == null
-            && string.IsNullOrEmpty(category)
-            && string.IsNullOrEmpty(manufacturer))
+        var criteria = new ProductFilterCriteria
         {
-            products = await productRepository.GetAllAsync(ct);
-        }
-        else
-        {
-            products = await productRepository.FilterAsync(name, desc, priceMax, category, manufacturer, ct);
-        }
+            Name = request.Name,
+            Description = request.Description,
+            MaxPrice = request.MaxPrice,
+            Category = request.Category,
+            Manufacturer = request.Manufacturer
+        };
 
-        var result = products.Select(p => new
-        {
-            ProductId = p.Id,
-            p.Name,
-            p.Description,
-            p.CurrentPrice,
-            p.CurrencyCode,
-            Category = new
-            {
-                CategoryId = p.ProductCategory?.Id,
-                CategoryName = p.ProductCategory?.Name
-            },
-            Manufacturer = new
-            {
-                ManufacturerId = p.Manufacturer?.Id,
-                ManufacturerName = p.Manufacturer?.Name
-            }
-        });
+        IReadOnlyList<Product> products = await productRepository.FilterAsync(criteria, ct);
 
+        var result = mapper.Map<IEnumerable<ProductDto>>(products);
         return Ok(result);
     }
 
@@ -62,27 +35,11 @@ public class ProductsController(ProductRepository productRepository) : Controlle
         Product? product = await productRepository.GetByIdAsync(id, ct);
         if (product == null)
         {
-            return NotFound();
+            return NotFound($"Product with id '{id}' not found");
         }
 
-        return Ok(new
-        {
-            ProductId = product.Id,
-            product.Name,
-            product.Description,
-            product.CurrentPrice,
-            product.CurrencyCode,
-            Category = new
-            {
-                CategoryId = product.ProductCategory?.Id,
-                CategoryName = product.ProductCategory?.Name,
-            },
-            Manufacturer = new
-            {
-                ManufacturerId = product.Manufacturer?.Id,
-                ManufacturerName = product.Manufacturer?.Name
-            }
-        });
+        var dto = mapper.Map<ProductDto>(product);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -104,7 +61,8 @@ public class ProductsController(ProductRepository productRepository) : Controlle
         };
 
         Product created = await productRepository.AddAsync(product, ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var dto = mapper.Map<ProductDto>(created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
     }
 
     [HttpPut("{id:int}")]
@@ -133,7 +91,7 @@ public class ProductsController(ProductRepository productRepository) : Controlle
         Product? product = await productRepository.GetByIdAsync(id, ct);
         if (product == null)
         {
-            return NotFound($"Product with id: \'{id}\' not found");
+            return NotFound($"Product with id '{id}' not found");
         }
 
         await productRepository.DeleteAsync(id, ct);

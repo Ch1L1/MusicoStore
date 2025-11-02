@@ -55,11 +55,3 @@ public class TokenAuthMiddleware
         await _next(context);
     }
 }
-
-public static class TokenAuthMiddlewareExtensions
-{
-    public static IApplicationBuilder UseTokenAuth(this IApplicationBuilder app)
-    {
-        return app.UseMiddleware<TokenAuthMiddleware>();
-    }
-}

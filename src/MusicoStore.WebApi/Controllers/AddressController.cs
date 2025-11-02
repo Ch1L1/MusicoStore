@@ -1,27 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
+using AutoMapper;
+using MusicoStore.WebApi.Models.Dtos;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class AddressController(IRepository<Address> addressRepository) : ControllerBase
+public class AddressController(IRepository<Address> addressRepository, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         IReadOnlyList<Address> addresses = await addressRepository.GetAllAsync(ct);
-        return Ok(addresses.Select(a => new
-        {
-            AddressId = a.Id,
-            a.StreetName,
-            a.StreetNumber,
-            a.City,
-            a.PostalNumber,
-            a.CountryCode
-        }));
+        var result = mapper.Map<IEnumerable<AddressDto>>(addresses);
+        return Ok(result);
     }
 
     [HttpGet("{id:int}")]
@@ -30,18 +23,11 @@ public class AddressController(IRepository<Address> addressRepository) : Control
         Address? address = await addressRepository.GetByIdAsync(id, ct);
         if (address == null)
         {
-            return NotFound();
+            return NotFound($"Address with id '{id}' not found");
         }
 
-        return Ok(new
-        {
-            AddressId = address.Id,
-            address.StreetName,
-            address.StreetNumber,
-            address.City,
-            address.PostalNumber,
-            address.CountryCode
-        });
+        var dto = mapper.Map<AddressDto>(address);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -62,7 +48,8 @@ public class AddressController(IRepository<Address> addressRepository) : Control
         };
 
         Address created = await addressRepository.AddAsync(address, ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var dto = mapper.Map<AddressDto>(created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
     }
 
     [HttpDelete("{id:int}")]
@@ -71,7 +58,7 @@ public class AddressController(IRepository<Address> addressRepository) : Control
         Address? address = await addressRepository.GetByIdAsync(id, ct);
         if (address == null)
         {
-            return NotFound();
+            return NotFound($"Address with id '{id}' not found");
         }
 
         await addressRepository.DeleteAsync(id, ct);

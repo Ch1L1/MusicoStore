@@ -1,32 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
+using MusicoStore.DataAccessLayer.Abstractions;
 using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.Infrastructure.Repository;
 using MusicoStore.WebApi.Models;
+using AutoMapper;
+using MusicoStore.WebApi.Models.Dtos;
 
 namespace MusicoStore.WebApi.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-public class ManufacturerController(IRepository<Manufacturer> manufacturerRepository) : ControllerBase
+public class ManufacturerController(IRepository<Manufacturer> manufacturerRepository, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         IReadOnlyList<Manufacturer> manufacturers = await manufacturerRepository.GetAllAsync(ct);
-        return Ok(manufacturers.Select(m => new
-        {
-            ManufacturerId = m.Id,
-            m.Address,
-            Products = m.Products?.Select(p => new
-            {
-                ProductId = p.Id,
-                p.Name,
-                p.Description,
-                p.CurrentPrice,
-                p.CurrencyCode,
-                CategoryName = p.ProductCategory?.Name
-            })
-        }));
+        var result = mapper.Map<IEnumerable<ManufacturerDto>>(manufacturers);
+        return Ok(result);
     }
 
     [HttpGet("{id:int}")]
@@ -35,23 +23,11 @@ public class ManufacturerController(IRepository<Manufacturer> manufacturerReposi
         Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
         if (manufacturer == null)
         {
-            return NotFound();
+            return NotFound($"Manufacturer with id '{id}' not found");
         }
 
-        return Ok(new
-        {
-            ManufacturerId = manufacturer.Id,
-            manufacturer.Address,
-            Products = manufacturer.Products?.Select(p => new
-            {
-                ProductId = p.Id,
-                p.Name,
-                p.Description,
-                p.CurrentPrice,
-                p.CurrencyCode,
-                CategoryName = p.ProductCategory?.Name
-            })
-        });
+        var dto = mapper.Map<ManufacturerDto>(manufacturer);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -69,7 +45,8 @@ public class ManufacturerController(IRepository<Manufacturer> manufacturerReposi
         };
 
         Manufacturer created = await manufacturerRepository.AddAsync(manufacturer, ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var dto = mapper.Map<ManufacturerDto>(created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
     }
 
     [HttpPut("{id:int}")]
@@ -95,7 +72,7 @@ public class ManufacturerController(IRepository<Manufacturer> manufacturerReposi
         Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
         if (manufacturer == null)
         {
-            return NotFound();
+            return NotFound($"Manufacturer with id '{id}' not found");
         }
 
         await manufacturerRepository.DeleteAsync(id, ct);

@@ -1,4 +1,4 @@
-namespace MusicoStore.Infrastructure.Repository;
+namespace MusicoStore.DataAccessLayer.Abstractions;
 
 public interface IRepository<TEntity>
     where TEntity : class

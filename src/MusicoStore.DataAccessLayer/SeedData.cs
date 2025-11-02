@@ -1,4 +1,5 @@
 using MusicoStore.DataAccessLayer.Entities;
+using MusicoStore.DataAccessLayer.Enums;
 
 namespace MusicoStore.DataAccessLayer;
 
@@ -10,7 +11,9 @@ public static class SeedData
         await db.Database.EnsureCreatedAsync();
 
         if (db.Products.Any())
+        {
             return;
+        }
 
         // Addresses
         var addrUsa = new Address
@@ -78,7 +81,7 @@ public static class SeedData
                 Name = "Studio Microphone",
                 Description = "Cardioid condenser mic",
                 CurrentPrice = 129.99m,
-                CurrencyCode = "USD",
+                CurrencyCode = Currency.USD,
                 ProductCategoryId = microphones.Id,
                 ManufacturerId = shure.Id
             },
@@ -87,7 +90,7 @@ public static class SeedData
                 Name = "Dynamic Microphone",
                 Description = "Handheld vocal mic",
                 CurrentPrice = 79.50m,
-                CurrencyCode = "USD",
+                CurrencyCode = Currency.USD,
                 ProductCategoryId = microphones.Id,
                 ManufacturerId = shure.Id
             },
@@ -96,7 +99,7 @@ public static class SeedData
                 Name = "Acoustic Guitar",
                 Description = "Spruce top dreadnought",
                 CurrentPrice = 199.00m,
-                CurrencyCode = "USD",
+                CurrencyCode = Currency.USD,
                 ProductCategoryId = guitars.Id,
                 ManufacturerId = yamaha.Id
             },
@@ -105,7 +108,7 @@ public static class SeedData
                 Name = "Jazz DVD Collection",
                 Description = "Classic jazz performances",
                 CurrentPrice = 39.90m,
-                CurrencyCode = "USD",
+                CurrencyCode = Currency.USD,
                 ProductCategoryId = dvds.Id,
                 ManufacturerId = neumann.Id
             }
