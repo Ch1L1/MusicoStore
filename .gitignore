@@ -37,14 +37,16 @@ packages/
 .nuget/
 *.lock.json
 
-# Entity Framework
-Migrations/
 
 # Logs
 logs/
 *.log
 *.tld
 *.blg
+logs.db
+logs.db-shm
+logs.db-wal
+
 
 # Secrets
 secrets.json
@@ -69,3 +71,8 @@ yarn-error.log
 # Publish
 publish/
 *.Publish.xml
+
+#SQLite
+*.db
+*.db-shm
+*db-wal

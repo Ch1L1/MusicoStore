@@ -2,9 +2,6 @@ using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MusicoStore.DataAccessLayer.Abstractions;
-using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.DataAccessLayer.Repository;
 
 namespace MusicoStore.DataAccessLayer;
 
@@ -19,14 +16,6 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(connStr));
-
-        // Repositories
-        services.AddScoped<IRepository<Product>, ProductRepository>();
-        services.AddScoped<IRepository<ProductCategory>, ProductCategoryRepository>();
-        services.AddScoped<IRepository<Address>, AddressRepository>();
-        services.AddScoped<IRepository<Manufacturer>, ManufacturerRepository>();
-
-        services.AddScoped<ProductRepository>();
 
         return services;
     }

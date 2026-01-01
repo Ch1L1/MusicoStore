@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Microsoft.AspNetCore.Http;
 
 namespace MusicoStore.WebApi.Middleware;
 

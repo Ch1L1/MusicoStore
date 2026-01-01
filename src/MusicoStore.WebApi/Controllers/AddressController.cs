@@ -1,67 +1,53 @@
 using Microsoft.AspNetCore.Mvc;
-using MusicoStore.DataAccessLayer.Abstractions;
-using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.WebApi.Models;
-using AutoMapper;
-using MusicoStore.WebApi.Models.Dtos;
+using MusicoStore.Domain.DTOs.Address;
+using MusicoStore.Domain.Interfaces.Service;
+using MusicoStore.Domain.Constants;
 
 namespace MusicoStore.WebApi.Controllers;
 
-public class AddressController(IRepository<Address> addressRepository, IMapper mapper) : ApiControllerBase
+public class AddressController(IAddressService addressService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        IReadOnlyList<Address> addresses = await addressRepository.GetAllAsync(ct);
-        var result = mapper.Map<IEnumerable<AddressDto>>(addresses);
-        return Ok(result);
+        List<AddressDTO> addresses = await addressService.FindAllAsync(ct);
+        return Ok(addresses);
     }
+
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        Address? address = await addressRepository.GetByIdAsync(id, ct);
-        if (address == null)
+        if (!addressService.DoesExistById(id))
         {
-            return NotFound($"Address with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Address", $"id '{id}'"));
         }
 
-        var dto = mapper.Map<AddressDto>(address);
-        return Ok(dto);
+        AddressDTO address = await addressService.FindByIdAsync(id, ct);
+        return Ok(address);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(AddressModel model, CancellationToken ct)
+    public async Task<IActionResult> Create(CreateAddressDTO req, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var address = new Address
-        {
-            City = model.City,
-            StreetName = model.StreetName,
-            StreetNumber = model.StreetNumber,
-            CountryCode = model.CountryCode,
-            PostalNumber = model.PostalNumber
-        };
-
-        Address created = await addressRepository.AddAsync(address, ct);
-        var dto = mapper.Map<AddressDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
+        AddressDTO res = await addressService.CreateAsync(req, ct);
+        return CreatedAtAction(nameof(GetById), new { id = res.AddressId }, res);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        Address? address = await addressRepository.GetByIdAsync(id, ct);
-        if (address == null)
+        if (!addressService.DoesExistById(id))
         {
-            return NotFound($"Address with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Address", $"id '{id}'"));
         }
 
-        await addressRepository.DeleteAsync(id, ct);
+        await addressService.DeleteByIdAsync(id, ct);
         return NoContent();
     }
 }

@@ -22,41 +22,124 @@
     </style>
 </head>
 <body>
-<h2>MusicoStore</h2>
-<button onclick="load()">Load Products</button>
-<table>
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Price</th>
-        <th>Manufacturer</th>
-    </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-</table>
-<script>
-    async function load() {
-        const res = await fetch('/api/v1/products');
-        const data = await res.json();
-        const rows = document.getElementById('rows');
-        rows.innerHTML = '';
-        data.forEach(p => {
-            const tr = document.createElement('tr');
-            const manufacturerName = p.manufacturer?.manufacturerName || '(unknown)';
+    <h2>MusicoStore</h2>
+    <button onclick="loadProducts()">Load Products</button>
+    <form id="product-filter-form">
+        <fieldset>
+            <legend>Filter products</legend>
 
-            tr.innerHTML = `
-                <td>${p.name}</td>
-                <td>${p.description}</td>
-                <td>${p.currentPrice.toFixed(2)} ${p.currencyCode}</td>
-                <td>${manufacturerName}</td>
-            `;
+            <label>
+                Name:
+                <input type="text" id="filter-name" name="name">
+            </label>
 
-            rows.appendChild(tr);
-        });
-    }
+            <label>
+                Description:
+                <input type="text" id="filter-description" name="description">
+            </label>
 
-    load();
-</script>
+            <label>
+                Max price:
+                <input type="number" step="0.01" id="filter-maxprice" name="maxPrice">
+            </label>
+
+            <label>
+                Category:
+                <input type="text" id="filter-category" name="category">
+            </label>
+
+            <label>
+                Manufacturer:
+                <input type="text" id="filter-manufacturer" name="manufacturer">
+            </label>
+
+            <button type="submit">Apply</button>
+            <button type="button" id="filter-clear">Clear</button>
+        </fieldset>
+    </form>
+
+    <table id="products-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Currency</th>
+                <th>Category</th>
+                <th>Manufacturer</th>
+            </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
+    <script>
+        const apiUrl = '/api/v1/products'; 
+
+        async function loadProducts() {
+            const params = new URLSearchParams();
+
+            const name = document.getElementById('filter-name').value.trim();
+            const description = document.getElementById('filter-description').value.trim();
+            const maxPrice = document.getElementById('filter-maxprice').value.trim();
+            const category = document.getElementById('filter-category').value.trim();
+            const manufacturer = document.getElementById('filter-manufacturer').value.trim();
+
+            if (name) params.append('name', name);
+            if (description) params.append('description', description);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            if (category) params.append('category', category);
+            if (manufacturer) params.append('manufacturer', manufacturer);
+
+            const url = params.toString() ? `${apiUrl}?${params.toString()}` : apiUrl;
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': 'Bearer simple-token'
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to load products', response.status, await response.text());
+                return;
+            }
+
+            const products = await response.json();
+            renderProducts(products);
+        }
+
+        function renderProducts(products) {
+            const tbody = document.querySelector('#products-table tbody');
+            tbody.innerHTML = '';
+
+            products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.productId}</td>
+                    <td>${p.name}</td>
+                    <td>${p.description}</td>
+                    <td>${p.currentPrice}</td>
+                    <td>${p.currencyCode}</td>
+                    <td>${p.category?.categoryName ?? ''}</td>
+                    <td>${p.manufacturer?.manufacturerName ?? ''}</td>
+                  `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('product-filter-form')
+            .addEventListener('submit', function (e) {
+                e.preventDefault();
+                loadProducts();
+            });
+
+        document.getElementById('filter-clear')
+            .addEventListener('click', function () {
+                document.getElementById('product-filter-form').reset();
+                loadProducts();
+            });
+
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+
 </body>
 </html>

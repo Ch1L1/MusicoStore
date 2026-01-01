@@ -1,100 +1,140 @@
 using Microsoft.AspNetCore.Mvc;
-using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.DataAccessLayer.Models;
-using MusicoStore.DataAccessLayer.Repository;
-using MusicoStore.WebApi.Models;
-using AutoMapper;
-using MusicoStore.WebApi.Models.Dtos;
+using MusicoStore.Domain.DTOs;
+using MusicoStore.Domain.DTOs.Product;
+using MusicoStore.Domain.Constants;
+using MusicoStore.Domain.Interfaces.Service;
 
 namespace MusicoStore.WebApi.Controllers;
 
-public class ProductsController(ProductRepository productRepository, IMapper mapper) : ApiControllerBase
+public class ProductsController(IProductService productService) : ApiControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Filter([FromQuery] ProductFilterRequest request, CancellationToken ct)
+    public async Task<IActionResult> Filter([FromQuery] ProductFilterRequestDTO req, CancellationToken ct)
     {
-        var criteria = new ProductFilterCriteria
-        {
-            Name = request.Name,
-            Description = request.Description,
-            MaxPrice = request.MaxPrice,
-            Category = request.Category,
-            Manufacturer = request.Manufacturer
-        };
-
-        IReadOnlyList<Product> products = await productRepository.FilterAsync(criteria, ct);
-
-        var result = mapper.Map<IEnumerable<ProductDto>>(products);
-        return Ok(result);
+        List<ProductDTO> products = await productService.FilterAsync(req, ct);
+        return Ok(products);
     }
-
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        Product? product = await productRepository.GetByIdAsync(id, ct);
-        if (product == null)
+        if (!productService.DoesExistById(id))
         {
-            return NotFound($"Product with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Product", $"id '{id}'"));
         }
 
-        var dto = mapper.Map<ProductDto>(product);
-        return Ok(dto);
+        ProductDTO product = await productService.FindByIdAsync(id, ct);
+        return Ok(product);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProductModel model, CancellationToken ct)
+    public async Task<IActionResult> Create(CreateProductDTO req, [FromQuery] int customerId, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var product = new Product
-        {
-            Name = model.Name,
-            Description = model.Description,
-            CurrentPrice = model.CurrentPrice,
-            CurrencyCode = model.CurrencyCode,
-            ProductCategoryId = model.ProductCategoryId,
-            ManufacturerId = model.ManufacturerId
-        };
-
-        Product created = await productRepository.AddAsync(product, ct);
-        var dto = mapper.Map<ProductDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
+        ProductDTO created = await productService.CreateAsync(req, customerId, ct);
+        return CreatedAtAction(nameof(GetById), new { id = created.ProductId }, created);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, ProductModel model, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, UpdateProductDTO req, [FromQuery] int customerId,
+        CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        await productRepository.UpdateAsync(new Product
+
+        if (!productService.DoesExistById(id))
         {
-            Id = id,
-            Name = model.Name,
-            Description = model.Description,
-            CurrentPrice = model.CurrentPrice,
-            CurrencyCode = model.CurrencyCode,
-            ProductCategoryId = model.ProductCategoryId,
-            ManufacturerId = model.ManufacturerId
-        }, ct);
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Product", $"id '{id}'"));
+        }
+
+        await productService.UpdateAsync(id, req, customerId, ct);
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    public async Task<IActionResult> Delete(int id, [FromQuery] int customerId, CancellationToken ct)
     {
-        Product? product = await productRepository.GetByIdAsync(id, ct);
-        if (product == null)
+        if (!productService.DoesExistById(id))
         {
-            return NotFound($"Product with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Product", $"id '{id}'"));
         }
 
-        await productRepository.DeleteAsync(id, ct);
+        await productService.DeleteByIdAsync(id, customerId, ct);
         return NoContent();
+    }
+
+    [HttpPost("{id:int}/image")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadImage(int id, IFormFile file, [FromQuery] int customerId,
+        CancellationToken ct)
+    {
+        if (!productService.DoesExistById(id))
+        {
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Product", $"id '{id}'"));
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("No file uploaded.");
+        }
+
+        await using Stream stream = file.OpenReadStream();
+
+        var fileDto = new FileDTO
+        {
+            Content = stream,
+            FileName = file.FileName,
+            ContentType = file.ContentType
+        };
+
+        try
+        {
+            var relativePath = await productService.UploadImageAsync(id, fileDto, customerId, ct);
+
+            var imageUrl = $"{Request.Scheme}://{Request.Host}/{relativePath}";
+            return Ok(new { imageUrl, relativePath });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(403, ex.Message);
+        }
+    }
+
+    [HttpDelete("{id:int}/image")]
+    public async Task<IActionResult> DeleteImage(int id, [FromQuery] int customerId, CancellationToken ct)
+    {
+        if (!productService.DoesExistById(id))
+        {
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Product", $"id '{id}'"));
+        }
+
+        try
+        {
+            await productService.DeleteImageAsync(id, customerId, ct);
+
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(403, ex.Message);
+        }
     }
 }

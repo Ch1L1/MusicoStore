@@ -1,81 +1,69 @@
 using Microsoft.AspNetCore.Mvc;
-using MusicoStore.DataAccessLayer.Abstractions;
-using MusicoStore.DataAccessLayer.Entities;
-using MusicoStore.WebApi.Models;
-using AutoMapper;
-using MusicoStore.WebApi.Models.Dtos;
+using MusicoStore.Domain.DTOs.Manufacturer;
+using MusicoStore.Domain.Interfaces.Service;
+using MusicoStore.Domain.Constants;
 
 namespace MusicoStore.WebApi.Controllers;
 
-public class ManufacturerController(IRepository<Manufacturer> manufacturerRepository, IMapper mapper) : ApiControllerBase
+public class ManufacturerController(IManufacturerService manufacturerService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        IReadOnlyList<Manufacturer> manufacturers = await manufacturerRepository.GetAllAsync(ct);
-        var result = mapper.Map<IEnumerable<ManufacturerDto>>(manufacturers);
-        return Ok(result);
+        List<ManufacturerDTO> manufacturers = await manufacturerService.FindAllAsync(ct);
+        return Ok(manufacturers);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
-        if (manufacturer == null)
+        if (!manufacturerService.DoesExistById(id))
         {
-            return NotFound($"Manufacturer with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Manufacturer", $"id '{id}'"));
         }
 
-        var dto = mapper.Map<ManufacturerDto>(manufacturer);
-        return Ok(dto);
+        ManufacturerDTO manufacturer = await manufacturerService.FindByIdAsync(id, ct);
+        return Ok(manufacturer);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ManufacturerModel model, CancellationToken ct)
+    public async Task<IActionResult> Create(CreateManufacturerDTO req, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var manufacturer = new Manufacturer
-        {
-            Name = model.Name,
-            AddressId = model.AddressId
-        };
-
-        Manufacturer created = await manufacturerRepository.AddAsync(manufacturer, ct);
-        var dto = mapper.Map<ManufacturerDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, dto);
+        ManufacturerDTO created = await manufacturerService.CreateAsync(req, ct);
+        return CreatedAtAction(nameof(GetById), new { id = created.ManufacturerId }, created);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, ManufacturerModel model, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, UpdateManufacturerDTO req, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        await manufacturerRepository.UpdateAsync(new Manufacturer
+        if (!manufacturerService.DoesExistById(id))
         {
-            Id = id,
-            Name = model.Name,
-            AddressId = model.AddressId
-        }, ct);
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Manufacturer", $"id '{id}'"));
+        }
+
+        await manufacturerService.UpdateAsync(id, req, ct);
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        Manufacturer? manufacturer = await manufacturerRepository.GetByIdAsync(id, ct);
-        if (manufacturer == null)
+        if (!manufacturerService.DoesExistById(id))
         {
-            return NotFound($"Manufacturer with id '{id}' not found");
+            return NotFound(string.Format(ErrorMessages.NotFoundFormat, "Manufacturer", $"id '{id}'"));
         }
 
-        await manufacturerRepository.DeleteAsync(id, ct);
+        await manufacturerService.DeleteByIdAsync(id, ct);
         return NoContent();
     }
 }
