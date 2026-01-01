@@ -58,13 +58,17 @@ dotnet run --project src/MusicoStore.WebApi
 MusicoStore/ <br />
 ├─ src/ <br />
 │  ├─ MusicoStore.WebApi/            # Controllers, Middleware, wwwroot (mini UI) <br />
-│  ├─ MusicoStore.Infrastructure/    # DI wiring, repositories <br /> 
-│  └─ MusicoStore.DataAccessLayer/   # EF Core DbContext, entities, seed data <br />
+│  ├─ MusicoStore.WebMVC/            # MVC UI (registration/login, basic front-end) <br /> 
+│  ├─ MusicoStore.DataAccessLayer/   # EF Core DbContext, entities, seed data <br />
+│  ├─ MusicoStore.BusinessLayer/     # services / business logic <br />
+│  ├─ MusicoStore.Domain/            # entities, DTOs, mapping profiles, interfaces <br />
+│  └─ MusicoStore.Mongo/             # MongoDB logging helpers <br /> 
 ├─ docs/ <br />
-│  └─ diagrams/                      # ER & Use-case images <br />
+│  └─ diagrams/                      # ER & Use-case images & README<br />
+├─ tests/ <br />
+│  └─ MusicoStore.Tests/             # xUnit tests <br />
 ├─ docker-compose.yml                # SQL Server (Windows/Linux) <br />
 ├─ docker-compose-macos.yml          # SQL Server (Apple Silicon) <br />
-├─ .githooks/pre-commit              # runs 'dotnet format' <br />
 ├─ .editorconfig                     # C# style <br />
 └─ MusicoStore.sln <br />
 
@@ -111,13 +115,17 @@ SQL Server
 - **Categories** `/api/v1/productcategory` – CRUD
 - **Manufacturers** `/api/v1/manufacturer` – CRUD
 - **Addresses** `/api/v1/address` – CRUD
+- **Customers** `/api/v1/customers` – CRUD
+- **Customer Addresses** `/api/customers/{customerId}/addresses` – list/add/remove addresses for a customer
+- **Storages** `/api/v1/storage` – CRUD
+- **Orders** `/api/v1/orders` – CRUD
 
 ### Seeding & Reset of Database
 
 - `SeedData.EnsureSeededAsync` currently contains:
   - `EnsureDeletedAsync()` **(temporary for testing)**  
   - `EnsureCreatedAsync()`  
-  - Inserts demo addresses, manufacturers, categories, and products.
+  - Inserts demo data using Bogus, randomly generated on each startup for the development version.
 
 **Reset DB (Docker):**
 ```bash
@@ -126,5 +134,5 @@ docker compose up -d            # rebuild
 ```
 
 **Reset DB (LocalDB):**
-- Stop API, then delete `MusicoStoreDb` via SQL Server Object Explorer or
+- Stop API, then delete `MusicoStoreDb` via SQL Server Object Explorer and also MongoDB or
 - Temporarily keep `EnsureDeletedAsync()` in seed (already present for M1).

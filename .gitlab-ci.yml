@@ -1,0 +1,52 @@
+default:
+  tags:
+    - shared-fi
+
+stages:
+  - build
+  - test
+
+variables:
+  DOTNET_VERSION: "9.0.0"
+
+image: mcr.microsoft.com/dotnet/sdk:9.0
+
+before_script:
+  - dotnet --version
+
+# ---- Code formatting check ----
+format-check:
+  stage: build
+  script:
+    - dotnet tool restore
+    - dotnet format --verify-no-changes
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ---- Build job ----
+build-job:
+  stage: build
+  script:
+    - dotnet restore
+    - dotnet build --configuration Release --no-restore
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ---- Test job ----
+test-job:
+  stage: test
+  script:
+    - dotnet test --configuration Release --logger "trx;LogFileName=test-results.trx" --logger "junit;LogFileName=test-results.xml"
+  artifacts:
+    when: always
+    paths:
+      - tests/**/TestResults/
+    reports:
+      junit: tests/**/TestResults/test-results.xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
