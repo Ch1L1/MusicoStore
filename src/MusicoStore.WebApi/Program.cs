@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using MusicoStore.BusinessLayer.Middleware;
 using MusicoStore.BusinessLayer.Services;
 using MusicoStore.DataAccessLayer;
 using MusicoStore.DataAccessLayer.Repository;
@@ -30,7 +30,20 @@ builder.Services.AddSingleton(resolver =>
     return settings;
 });
 
-builder.Services.AddSingleton<ILoggingRepository, MongoLoggingRepository>();
+builder.Services.AddSingleton<ILoggingRepository>(sp =>
+{
+    var settings = sp.GetRequiredService<MongoDbSettings>();
+    var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger("LoggingRepositoryInit");
+
+    if (MongoLoggingProbe.CanConnect(settings, out var initError))
+    {
+        return new MongoLoggingRepository(settings);
+    }
+
+    logger.LogWarning(initError, "Mongo logging disabled: unable to connect/authenticate. Check MongoDb settings.");
+    return new NoOpLoggingRepository();
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -40,6 +53,8 @@ builder.Services.AddControllers()
     })
     .AddXmlSerializerFormatters();
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IRepository<ProductCategory>, ProductCategoryRepository>();
 builder.Services.AddScoped<IRepository<ProductEditLog>, ProductEditLogRepository>();
@@ -48,12 +63,14 @@ builder.Services.AddScoped<IRepository<Address>, AddressRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<IRepository<Storage>, StorageRepository>();
 builder.Services.AddScoped<IRepository<Customer>, CustomerRepository>();
+builder.Services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
 builder.Services.AddScoped<IRepository<Order>, OrderRepository>();
 builder.Services.AddScoped<IRepository<OrderedProduct>, OrderedProductRepository>();
 builder.Services.AddScoped<IRepository<OrderState>, OrderStateRepository>();
-builder.Services.AddScoped<IRepository<OrderStatusLog>, OrderStatusLogRepository>();
-
-builder.Services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
+builder.Services.AddScoped<IOrderStatusLogRepository, OrderStatusLogRepository>(); 
+builder.Services.AddScoped<IRepository<GiftCard>, GiftCardRepository>();
+builder.Services.AddScoped<IGiftCardCouponRepository, GiftCardCouponRepository>();
+builder.Services.AddScoped<IProductCategoryAssignmentRepository, ProductCategoryAssignmentRepository>();
 
 builder.Services.AddScoped<ICustomerAddressService, CustomerAddressService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
@@ -65,6 +82,8 @@ builder.Services.AddScoped<IStorageService, StorageService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IStoragePathProvider, WebRootPathProvider>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IGiftCardService, GiftCardService>();
+builder.Services.AddScoped<IProductCategoryAssignmentService, ProductCategoryAssignmentService>();
 
 builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
 
@@ -113,7 +132,7 @@ app.UseStaticFiles();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<ResponseFormatMiddleware>();
 app.UseMiddleware<TokenAuthMiddleware>();
-//app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>("[API]");
 
 app.MapControllers();
 

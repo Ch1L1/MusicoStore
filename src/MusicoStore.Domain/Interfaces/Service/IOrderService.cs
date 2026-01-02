@@ -11,4 +11,8 @@ public interface IOrderService
     Task<OrderDTO> CreateAsync(CreateOrderDTO dto, CancellationToken ct);
     Task ChangeStateAsync(ChangeOrderStateDTO dto, CancellationToken ct);
     Task DeleteByIdAsync(int id, CancellationToken ct);
+    Task ApplyGiftCardAsync(int orderId, string couponCode, CancellationToken ct);
+    Task RemoveGiftCardAsync(int orderId, CancellationToken ct);
+    Task<List<string>> GetOrderStates(CancellationToken ct);
+
 }

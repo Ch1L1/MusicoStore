@@ -7,6 +7,6 @@ public class ProductViewModel
     public string Description { get; set; }
     public decimal CurrentPrice { get; set; }
     public string CurrencyCode { get; set; }
-    public string CategoryName { get; set; }
+    public string CategoryNames { get; set; }
     public string ManufacturerName { get; set; }
 }

@@ -63,4 +63,19 @@ public class OrderController(IOrderService orderService) : ApiControllerBase
         await orderService.DeleteByIdAsync(id, ct);
         return NoContent();
     }
+
+    [HttpPost("{orderId:int}/apply-gift-card")]
+    public async Task<IActionResult> ApplyGiftCard(int orderId, ApplyGiftCardDTO dto, CancellationToken ct)
+    {
+        await orderService.ApplyGiftCardAsync(orderId, dto.CouponCode, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{orderId:int}/remove-gift-card")]
+    public async Task<IActionResult> RemoveGiftCard(int orderId, CancellationToken ct)
+    {
+        await orderService.RemoveGiftCardAsync(orderId, ct);
+        return NoContent();
+    }
+
 }

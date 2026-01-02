@@ -12,6 +12,7 @@ Managing music equipment inventory with products, categories, and manufacturers.
 - .NET 9 SDK
 - Visual Studio 2022
 - Docker
+- .NET EF 
 
 ### Run the Application 
 
@@ -78,6 +79,7 @@ MusicoStore/ <br />
 - Product management with CRUD operations
 - Product categorization system
 - Filtering by name, description, price, category, and manufacturer
+- We have a test user in the MVC that's seeded with login details test@test.com / Test123!
 
 ## Documentation
 

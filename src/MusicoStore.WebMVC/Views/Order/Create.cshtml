@@ -1,0 +1,128 @@
+@model WebMVC.Models.Orders.OrderCreateViewModel
+@{ 
+    ViewData["Title"] = "Create Order"; 
+    
+    // Pre-loading product dropdown options
+    var productOptions = "";
+    if (Model.AvailableProducts != null)
+    {
+        foreach (var item in Model.AvailableProducts)
+        {
+            productOptions += $"<option value='{item.Value}'>{item.Text}</option>";
+        }
+    }
+}
+
+<div class="container mt-4">
+    <h2>Create New Order (Admin)</h2>
+    
+    <form asp-action="Create" method="post" id="orderForm">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="card mb-4">
+            <div class="card-header">Customer & Discount</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="CustomerId" class="form-label">Customer ID</label>
+                        <input asp-for="CustomerId" class="form-control" placeholder="e.g. 1" />
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CouponCode" class="form-label">Coupon Code (Optional)</label>
+                        <input asp-for="CouponCode" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4>Order Items</h4>
+        <div class="card p-3 mb-3 shadow-sm">
+            <table class="table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70%">Product</th>
+                        <th style="width: 20%">Quantity</th>
+                        <th style="width: 10%">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsContainer">
+                    @for (var i = 0; i < Model.Items.Count; i++)
+                    {
+                        <tr class="item-row">
+                            <td>
+                                <select name="Items[@i].ProductId" class="form-select" asp-items="Model.AvailableProducts">
+                                    <option value="">-- Select Product --</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input name="Items[@i].Quantity" class="form-control" type="number" min="1" value="@Model.Items[i].Quantity" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-row-btn" onclick="removeRow(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            
+            <button type="button" class="btn btn-secondary" onclick="addItemRow()">
+                <i class="bi bi-plus-circle"></i> Add Another Item
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success btn-lg">Create Order</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const productOptionsHtml = `@Html.Raw(productOptions)`;
+        
+        let itemIndex = @Model.Items.Count;
+
+        function addItemRow() {
+            const container = document.getElementById('itemsContainer');
+            
+            const tr = document.createElement('tr');
+            tr.className = 'item-row';
+            
+            tr.innerHTML = `
+                <td>
+                    <select name="Items[${itemIndex}].ProductId" class="form-select">
+                        <option value="">-- Select Product --</option>
+                        ${productOptionsHtml}
+                    </select>
+                </td>
+                <td>
+                    <input name="Items[${itemIndex}].Quantity" class="form-control" type="number" min="1" value="1" />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            container.appendChild(tr);
+            itemIndex++;
+        }
+
+        function removeRow(btn) {
+            const row = btn.closest('tr');
+            const rowCount = document.querySelectorAll('.item-row').length;
+            
+            if (rowCount > 1) {
+                row.remove();
+            } else {
+                alert("Order must have at least one item.");
+            }
+        }
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

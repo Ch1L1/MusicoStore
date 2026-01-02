@@ -1,0 +1,40 @@
+@model WebMVC.Models.Manufacturer.ManufacturerFormViewModel
+@{ ViewData["Title"] = "Edit Manufacturer"; }
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Edit Manufacturer: @Model.Id</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <input type="hidden" asp-for="Id"/>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Manufacturer Name</label>
+                            <input asp-for="Name" class="form-control"/>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AddressId" class="form-label">Select Address</label>
+                            <select asp-for="AddressId" asp-items="Model.Addresses" class="form-select">
+                                <option value="">-- Choose an address --</option>
+                            </select>
+                            <span asp-validation-for="AddressId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

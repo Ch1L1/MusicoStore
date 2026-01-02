@@ -4,6 +4,7 @@ using MusicoStore.BusinessLayer.Services;
 using MusicoStore.Domain.DTOs.Order;
 using MusicoStore.Domain.Entities;
 using MusicoStore.Domain.Interfaces.Repository;
+using MusicoStore.Domain.Interfaces.Service;
 
 namespace MusicoStore.BussinessLayer.Tests.Services;
 
@@ -11,11 +12,13 @@ public class OrderServiceTests
     {
     private readonly Mock<IRepository<Order>> _orderRepoMock = new();
     private readonly Mock<IRepository<OrderedProduct>> _orderedProductRepoMock = new();
-    private readonly Mock<IRepository<OrderStatusLog>> _orderStatusLogRepoMock = new();
+    private readonly Mock<IOrderStatusLogRepository> _orderStatusLogRepoMock = new();
     private readonly Mock<IRepository<OrderState>> _orderStateRepoMock = new();
     private readonly Mock<IProductRepository> _productRepoMock = new();
     private readonly Mock<IStockRepository> _stockRepoMock = new();
     private readonly Mock<ICustomerAddressRepository> _customerAddressRepoMock = new();
+    private readonly Mock<IGiftCardCouponRepository> _giftCardCouponRepoMock = new();
+    private readonly Mock<IGiftCardService> _giftCardServiceMock = new();
     private readonly Mock<IMapper> _mapperMock = new();
 
     private readonly OrderService _service;
@@ -30,6 +33,8 @@ public class OrderServiceTests
             _productRepoMock.Object,
             _stockRepoMock.Object,
             _customerAddressRepoMock.Object,
+            _giftCardCouponRepoMock.Object,
+            _giftCardServiceMock.Object,
             _mapperMock.Object);
         }
 

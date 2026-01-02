@@ -1,14 +1,63 @@
 @using WebMVC.Models.Products;
 
-@model List<ProductViewModel>
+@model ProductListViewModel
 @{
     ViewData["Title"] = "All Products";
 }
 
 <div class="container mt-4">
-    <h1 class="mb-4">All Products</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">All Products</h1>
+        @if (User.IsInRole("Employee"))
+        {
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Add New Product
+            </a>
+        }
+    </div>
 
-    @if (!Model.Any())
+    <div class="mb-4 position-relative">
+        <label for="GlobalSearch" class="form-label">Search anything</label>
+        <input type="text" class="form-control" id="GlobalSearch"
+               placeholder="Type to search products, categories, manufacturers..." autocomplete="off"/>
+        <div id="SearchSuggestions" class="list-group position-absolute w-100"
+             style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
+    </div>
+
+    <form method="get" asp-controller="Product" asp-action="AllProducts" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="Name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="Name" name="Name" value="@Context.Request.Query["Name"]"/>
+            </div>
+            <div class="col-md-3">
+                <label for="Description" class="form-label">Description</label>
+                <input type="text" class="form-control" id="Description" name="Description"
+                       value="@Context.Request.Query["Description"]"/>
+            </div>
+            <div class="col-md-2">
+                <label for="MaxPrice" class="form-label">Max Price</label>
+                <input type="number" step="0.01" class="form-control" id="MaxPrice" name="MaxPrice"
+                       value="@Context.Request.Query["MaxPrice"]"/>
+            </div>
+            <div class="col-md-2">
+                <label for="Category" class="form-label">Category</label>
+                <input type="text" class="form-control" id="Category" name="Category"
+                       value="@Context.Request.Query["Category"]"/>
+            </div>
+            <div class="col-md-2">
+                <label for="Manufacturer" class="form-label">Manufacturer</label>
+                <input type="text" class="form-control" id="Manufacturer" name="Manufacturer"
+                       value="@Context.Request.Query["Manufacturer"]"/>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a class="btn btn-secondary" asp-controller="Product" asp-action="AllProducts">Reset</a>
+        </div>
+    </form>
+
+    @if (!Model.Products.Any())
     {
         <div class="alert alert-info" role="alert">
             No products to display.
@@ -24,20 +73,134 @@
                 <th>Price</th>
                 <th>Category</th>
                 <th>Manufacturer</th>
+                @if (User.IsInRole("Employee"))
+                {
+                    <th>Actions</th>
+                }
             </tr>
             </thead>
             <tbody>
-            @foreach (var item in Model)
+            @foreach (var item in Model.Products)
             {
                 <tr>
                     <td>@item.Name</td>
                     <td>@item.Description</td>
                     <td>@item.CurrentPrice @item.CurrencyCode</td>
-                    <td>@item.CategoryName</td>
+                    <td>@item.CategoryNames</td>
                     <td>@item.ManufacturerName</td>
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </td>
+                    }
                 </tr>
             }
             </tbody>
         </table>
+        <nav aria-label="Product pages">
+            <ul class="pagination">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="AllProducts" asp-route-page="@i"
+                           asp-route-pageSize="@Model.PageSize">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
     }
 </div>
+
+<script>
+    (function () {
+        const input = document.getElementById('GlobalSearch');
+        const box = document.getElementById('SearchSuggestions');
+        let controller;
+
+        function clearBox() {
+            box.innerHTML = '';
+            box.style.display = 'none';
+        }
+
+        function renderGroup(title, items, renderItem) {
+            if (!items || items.length === 0) return;
+            const header = document.createElement('div');
+            header.className = 'list-group-item active';
+            header.textContent = title;
+            box.appendChild(header);
+            items.slice(0, 5).forEach(item => {
+                const el = document.createElement('a');
+                el.className = 'list-group-item list-group-item-action';
+                el.href = '#';
+                el.innerHTML = renderItem(item);
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const name = item.name ?? item.Name ?? '';
+                    const isCategory = title === 'Categories';
+                    const isManufacturer = title === 'Manufacturers';
+
+                    if (isCategory) {
+                        const cat = document.getElementById('Category');
+                        if (cat) cat.value = name;
+                    } else if (isManufacturer) {
+                        const man = document.getElementById('Manufacturer');
+                        if (man) man.value = name;
+                    } else {
+                        const nm = document.getElementById('Name');
+                        if (nm) nm.value = name;
+                    }
+
+                    input.value = name;
+                    clearBox();
+                });
+                box.appendChild(el);
+            });
+        }
+
+        async function fetchSuggestions(q) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+            try {
+                const res = await fetch(`/products/suggest?query=${encodeURIComponent(q)}`, {signal: controller.signal});
+                if (!res.ok) return clearBox();
+                const data = await res.json();
+                box.innerHTML = '';
+                renderGroup('Products', data.products || data.Products, (p) => `<strong>${p.name ?? p.Name}</strong> <small class="text-muted">${p.categoryName ?? p.CategoryName ?? ''} ${p.manufacturerName ?? p.ManufacturerName ?? ''}</small>`);
+                renderGroup('Categories', data.categories || data.Categories, (c) => `${c.name ?? c.Name}`);
+                renderGroup('Manufacturers', data.manufacturers || data.Manufacturers, (m) => `${m.name ?? m.Name}`);
+                box.style.display = box.children.length ? 'block' : 'none';
+            } catch (e) {
+            }
+        }
+
+        input.addEventListener('input', (e) => {
+            const q = e.target.value.trim();
+            if (q.length < 2) {
+                clearBox();
+                return;
+            }
+            fetchSuggestions(q);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const q = input.value.trim();
+                if (q.length === 0) return;
+                const params = new URLSearchParams();
+                params.set('Name', q);
+                clearBox();
+                window.location.href = `/products/AllProducts?${params.toString()}`;
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!box.contains(e.target) && e.target !== input) {
+                clearBox();
+            }
+        });
+    })();
+</script>

@@ -1,0 +1,34 @@
+﻿@model IEnumerable<WebMVC.Models.Orders.MyOrderViewModel>
+
+<h2>My Orders</h2>
+
+@if (!Model.Any())
+{
+    <p>You have not placed any orders yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.OrderId</td>
+                <td>@order.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                <td>
+                    <span class="badge bg-info">@order.Status</span>
+                </td>
+                <td>@order.TotalAmount.ToString("C")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

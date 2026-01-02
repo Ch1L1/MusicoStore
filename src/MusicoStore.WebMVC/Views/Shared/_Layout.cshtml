@@ -35,8 +35,38 @@
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Product" asp-action="AllProducts">Products</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Manufacturer" asp-action="Index">Manufacturers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Category" asp-action="Index">Categories</a>
+                    </li>
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Order" asp-action="Index">
+                                Orders
+                            </a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="GiftCard" asp-action="Index">
+                                GiftCards
+                            </a>
+                        </li>
+                    }
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="MyOrders" asp-action="MyOrders">
+                                My Orders
+                            </a>
+                        </li>
+                    }
                     @if (SignInManager.IsSignedIn(User))
                     {
                         <li class="nav-item">

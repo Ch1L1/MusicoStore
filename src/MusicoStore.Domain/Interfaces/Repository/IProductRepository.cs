@@ -8,4 +8,5 @@ public interface IProductRepository : IRepository<Product>
     public Task<Product?> GetByIdWithoutLogsAsync(int id, CancellationToken ct);
 
     public Task<IReadOnlyList<Product>> FilterAsync(ProductFilterCriteria filter, CancellationToken ct);
+    public Task<(IReadOnlyList<Product> Items, int TotalCount)> FilterPagedAsync(ProductFilterCriteria filter, int page, int pageSize, CancellationToken ct);
 }

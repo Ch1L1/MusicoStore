@@ -10,7 +10,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MusicoStore.Domain\MusicoStore.Domain.csproj"/>
+      <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.11" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MusicoStore.Domain\MusicoStore.Domain.csproj" />
     </ItemGroup>
 
 </Project>

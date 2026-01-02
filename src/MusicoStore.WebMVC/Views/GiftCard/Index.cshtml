@@ -1,0 +1,35 @@
+@model IEnumerable<MusicoStore.Domain.DTOs.GiftCard.GiftCardDTO>
+@{ ViewData["Title"] = "Gift Cards Management"; }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h1>Gift Cards</h1>
+        <a asp-action="Create" class="btn btn-success">Create New Card</a>
+    </div>
+
+    <table class="table table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>Amount</th>
+            <th>Validity</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var card in Model)
+        {
+            <tr>
+                <td>@card.Amount @card.CurrencyCode</td>
+                <td>@card.ValidFrom.ToShortDateString() - @card.ValidTo.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@card.Id" class="btn btn-sm btn-info">Manage Coupons</a>
+                    <form asp-action="Delete" asp-route-id="@card.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete this card definition?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

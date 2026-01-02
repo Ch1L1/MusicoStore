@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using MongoDB.Bson;
 using MusicoStore.Domain.Interfaces.Repository;
 
 namespace MusicoStore.Mongo.Logging;
@@ -25,5 +26,33 @@ public class MongoLoggingRepository : ILoggingRepository
         };
 
         await _collection.InsertOneAsync(entry, cancellationToken: ct);
+    }
+}
+
+public static class MongoLoggingProbe
+{
+    public static bool CanConnect(MongoDbSettings settings, out Exception? error)
+    {
+        try
+        {
+            var client = new MongoClient(settings.ConnectionString);
+            var db = client.GetDatabase(settings.DatabaseName);
+            db.RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+            error = null;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+            return false;
+        }
+    }
+}
+
+public sealed class NoOpLoggingRepository : ILoggingRepository
+{
+    public Task AddAsync(string method, string path, string body, CancellationToken ct)
+    {
+        return Task.CompletedTask;
     }
 }

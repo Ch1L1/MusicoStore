@@ -2,6 +2,7 @@ using AutoMapper;
 using MusicoStore.Domain.Constants;
 using MusicoStore.Domain.DTOs;
 using MusicoStore.Domain.DTOs.Product;
+using MusicoStore.Domain.DTOs;
 using MusicoStore.Domain.Entities;
 using MusicoStore.Domain.Interfaces.Repository;
 using MusicoStore.Domain.Interfaces.Service;
@@ -22,6 +23,17 @@ public class ProductService(
         ProductFilterCriteria filter = mapper.Map<ProductFilterCriteria>(filterDto);
         IReadOnlyList<Product> products = await productRepository.FilterAsync(filter, ct);
         return mapper.Map<List<ProductDTO>>(products);
+    }
+
+    public async Task<PagedResult<ProductDTO>> FilterPagedAsync(ProductFilterRequestDTO filterDto, int page = 1, int pageSize = 10, CancellationToken ct = default)
+    {
+        ProductFilterCriteria filter = mapper.Map<ProductFilterCriteria>(filterDto);
+        var (items, totalCount) = await productRepository.FilterPagedAsync(filter, page, pageSize, ct);
+        return new PagedResult<ProductDTO>
+        {
+            Items = mapper.Map<IEnumerable<ProductDTO>>(items),
+            TotalCount = totalCount
+        };
     }
 
     public async Task<ProductDTO> FindByIdAsync(int id, CancellationToken ct)

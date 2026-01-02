@@ -21,6 +21,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<OrderedProduct> OrderedProducts { get; set; }
     public DbSet<OrderStatusLog> OrderStatusLogs { get; set; }
     public DbSet<OrderState> OrderStates { get; set; }
+    public DbSet<GiftCard> GiftCards { get; set; }
+    public DbSet<GiftCardCoupon> GiftCardCoupons { get; set; }
+    public DbSet<ProductCategoryAssignment> ProductCategoryAssignments { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -36,10 +40,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(p => p.CurrentPrice).HasColumnType("decimal(12,2)").IsRequired();
             e.Property(p => p.CurrencyCode).HasConversion<String>().HasMaxLength(3).IsRequired()
                 .HasDefaultValue(Currency.USD);
-            e.HasOne(p => p.ProductCategory)
-                .WithMany(p => p.Products)
-                .HasForeignKey(p => p.ProductCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
             e.HasOne(p => p.Manufacturer)
                 .WithMany(p => p.Products)
                 .HasForeignKey(p => p.ManufacturerId)
@@ -55,6 +55,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasKey(c => c.Id);
             e.Property(c => c.Name).HasMaxLength(50).IsRequired();
         });
+
+        b.Entity<ProductCategoryAssignment>(e =>
+        {
+            e.ToTable("ProductCategoryAssignment");
+            e.HasKey(pca => new { pca.ProductId, pca.ProductCategoryId });
+            e.Property(pca => pca.IsPrimary)
+                .IsRequired();
+            e.HasOne(pca => pca.Product)
+                .WithMany(p => p.CategoryAssignments)
+                .HasForeignKey(pca => pca.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(pca => pca.ProductCategory)
+                .WithMany(c => c.CategoryAssignments)
+                .HasForeignKey(pca => pca.ProductCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(pca => pca.ProductId)
+                .HasFilter("[IsPrimary] = 1")
+                .IsUnique();
+        });
+
 
         b.Entity<ProductEditLog>(e =>
         {
@@ -239,6 +259,52 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasOne(u => u.Customer)
                 .WithOne()
                 .HasForeignKey<LocalIdentityUser>(u => u.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<GiftCard>(e =>
+        {
+            e.ToTable("GiftCard");
+
+            e.HasKey(gc => gc.Id);
+            e.Property(gc => gc.Id).UseIdentityColumn();
+
+            e.Property(gc => gc.Amount)
+                .HasColumnType("decimal(12,2)")
+                .IsRequired();
+
+            e.Property(gc => gc.CurrencyCode)
+                .HasConversion<string>()
+                .HasMaxLength(3)
+                .IsRequired()
+                .HasDefaultValue(Currency.USD);
+
+            e.Property(gc => gc.ValidFrom).IsRequired();
+            e.Property(gc => gc.ValidTo).IsRequired();
+
+            e.HasMany(gc => gc.Coupons)
+                .WithOne(c => c.GiftCard)
+                .HasForeignKey(c => c.GiftCardId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+
+        b.Entity<GiftCardCoupon>(e =>
+        {
+            e.ToTable("GiftCardCoupon");
+
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).UseIdentityColumn();
+
+            e.Property(c => c.CouponCode)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            e.HasIndex(c => c.CouponCode).IsUnique();
+
+            e.HasOne(c => c.Order)
+                .WithOne(o => o.GiftCardCoupon)
+                .HasForeignKey<GiftCardCoupon>(c => c.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

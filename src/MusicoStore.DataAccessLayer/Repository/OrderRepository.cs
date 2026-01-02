@@ -14,6 +14,8 @@ public class OrderRepository(AppDbContext db) : GenericRepository<Order>(db)
                 .ThenInclude(op => op.Product)
             .Include(o => o.StatusLog)
                 .ThenInclude(sl => sl.OrderState)
+            .Include(o => o.GiftCardCoupon)         
+                .ThenInclude(c => c.GiftCard)        
             .AsNoTracking()
             .ToListAsync(ct);
 
@@ -26,6 +28,8 @@ public class OrderRepository(AppDbContext db) : GenericRepository<Order>(db)
                 .ThenInclude(op => op.Product)
             .Include(o => o.StatusLog)
                 .ThenInclude(sl => sl.OrderState)
+            .Include(o => o.GiftCardCoupon)          
+                .ThenInclude(c => c.GiftCard)
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == id, ct);
 }
