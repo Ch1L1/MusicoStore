@@ -35,6 +35,12 @@
         <input asp-for="ConfirmPassword" type="password"/>
         <span asp-validation-for="ConfirmPassword"></span>
     </div>
+    <div>
+        <label asp-for="Employee"></label>
+        <input asp-for="Employee" type="checkbox" />
+        <span asp-validation-for="Employee"></span>
+    </div>
+
     <button type="submit">Register</button>
     @Html.ValidationSummary(false, "", new { @class = "text-danger" })
 </form>

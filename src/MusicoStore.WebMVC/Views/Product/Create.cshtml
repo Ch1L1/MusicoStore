@@ -1,0 +1,72 @@
+@using WebMVC.Models.Products
+@model ProductCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0 fs-4">Add product</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name"></label>
+                            <input asp-for="Name"/>
+                            <span asp-validation-for="Name"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description"></label>
+                            <textarea asp-for="Description" rows="3"></textarea>
+                            <span asp-validation-for="Description"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price"></label>
+                                <input asp-for="Price" type="number" step="0.01"/>
+                                <span asp-validation-for="Price"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CurrencyCode"></label>
+                                <input asp-for="CurrencyCode"/>
+                                <span asp-validation-for="CurrencyCode"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProductCategoryId"></label>
+                                <select asp-for="ProductCategoryId" asp-items="Model.Categories">
+                                    <option value="">-- Select category --</option>
+                                </select>
+                                <span asp-validation-for="ProductCategoryId"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ManufacturerId"></label>
+                                <select asp-for="ManufacturerId" asp-items="Model.Manufacturers">
+                                    <option value="">-- Select manufacturer --</option>
+                                </select>
+                                <span asp-validation-for="ManufacturerId"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="AllProducts" class="btn btn-outline-secondary">Back</a>
+                            <button type="submit" class="btn btn-success">Create</button>
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

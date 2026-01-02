@@ -12,6 +12,8 @@ public class Order : BaseEntity
     [ForeignKey(nameof(CustomerId))]
     public Customer Customer { get; set; }
 
+    public GiftCardCoupon? GiftCardCoupon { get; set; }
+
     public ICollection<OrderedProduct> OrderedProducts { get; set; } = new List<OrderedProduct>();
     public ICollection<OrderStatusLog> StatusLog { get; set; } = new List<OrderStatusLog>();
 }

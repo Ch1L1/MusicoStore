@@ -1,6 +1,9 @@
 using Bogus;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MusicoStore.DataAccessLayer.Enums;
+using MusicoStore.DataAccessLayer.Identity;
 using MusicoStore.Domain.Entities;
 
 namespace MusicoStore.DataAccessLayer;
@@ -24,9 +27,12 @@ public static class SeedData
         var manufacturers = await SeedManufacturersAsync(db, addresses, ct);
         var categories = await SeedProductCategoriesAsync(db, ct);
         var products = await SeedProductsAsync(db, categories, manufacturers, ct);
+        await SeedProductCategoryAssignmentsAsync(db, products, categories, ct);
         var (customers, customerAddresses) = await SeedCustomersAndAddressesAsync(db, addresses, ct);
         await EnsureMainAddressPerCustomerAsync(db, customers, customerAddresses, ct);
         await SeedOrdersAsync(db, customers, customerAddresses, products, rng, ct);
+        var giftCards = await SeedGiftCardsAsync(db, ct);
+        await SeedGiftCardCouponsAsync(db, giftCards, ct);
     }
 
     private static async Task SeedOrderStatesAsync(AppDbContext db, CancellationToken ct)
@@ -103,7 +109,6 @@ public static class SeedData
             .RuleFor(p => p.Description, f => f.Lorem.Sentence(8))
             .RuleFor(p => p.CurrentPrice, f => f.Random.Decimal(20m, 1000m))
             .RuleFor(p => p.CurrencyCode, f => Currency.USD)
-            .RuleFor(p => p.ProductCategoryId, f => f.PickRandom(categories).Id)
             .RuleFor(p => p.ManufacturerId, f => f.PickRandom(manufacturers).Id)
             .RuleFor(p => p.ImagePath, f => (string?)null);
 
@@ -113,7 +118,41 @@ public static class SeedData
         return products;
     }
 
-    private static async Task<(List<Customer> customers, List<CustomerAddress> customerAddresses)> SeedCustomersAndAddressesAsync(AppDbContext db, List<Address> addresses, CancellationToken ct)
+    private static async Task SeedProductCategoryAssignmentsAsync(AppDbContext db, List<Product> products, List<ProductCategory> categories, CancellationToken ct)
+    {
+        var rng = new Random();
+        var assignments = new List<ProductCategoryAssignment>();
+
+        foreach (var product in products)
+        {
+            int categoryCount = rng.Next(1, Math.Min(4, categories.Count));
+            var selectedCategories = categories
+                .OrderBy(_ => rng.Next())
+                .Take(categoryCount)
+                .ToList();
+
+            bool primaryAssigned = false;
+            foreach (var category in selectedCategories)
+            {
+                bool isPrimary = !primaryAssigned;
+                assignments.Add(new ProductCategoryAssignment
+                {
+                    ProductId = product.Id,
+                    ProductCategoryId = category.Id,
+                    IsPrimary = isPrimary
+                });
+                primaryAssigned = true;
+            }
+        }
+
+        db.ProductCategoryAssignments.AddRange(assignments);
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task<(List<Customer> customers, List<CustomerAddress> customerAddresses)> SeedCustomersAndAddressesAsync(
+        AppDbContext db,
+        List<Address> addresses,
+        CancellationToken ct)
     {
         var customerFaker = new Faker<Customer>("en")
             .RuleFor(c => c.FirstName, f => f.Name.FirstName())
@@ -126,7 +165,6 @@ public static class SeedData
                     .Where(ch => char.IsDigit(ch) || ch is '+' or ' ' or '-' or '(' or ')')
                     .ToArray());
 
-                // ensure max 20 characters to satisfy HasMaxLength(20)
                 return cleaned.Length <= 20
                     ? cleaned
                     : cleaned[..20];
@@ -136,12 +174,32 @@ public static class SeedData
         db.Customers.AddRange(customers);
         await db.SaveChangesAsync(ct);
 
-        var customerAddressFaker = new Faker<CustomerAddress>("en")
-            .RuleFor(ca => ca.CustomerId, f => f.PickRandom(customers).Id)
-            .RuleFor(ca => ca.AddressId, f => f.PickRandom(addresses).Id)
-            .RuleFor(ca => ca.IsMainAddress, f => f.Random.Bool(0.7f));
+        var customerAddresses = new List<CustomerAddress>();
+        var rng = new Random();
 
-        var customerAddresses = customerAddressFaker.Generate(20);
+        foreach (var customer in customers)
+        {
+            var mainAddress = new CustomerAddress
+            {
+                CustomerId = customer.Id,
+                AddressId = addresses[rng.Next(addresses.Count)].Id,
+                IsMainAddress = true
+            };
+
+            customerAddresses.Add(mainAddress);
+
+            int extraCount = rng.Next(0, 3);
+            for (int i = 0; i < extraCount; i++)
+            {
+                customerAddresses.Add(new CustomerAddress
+                {
+                    CustomerId = customer.Id,
+                    AddressId = addresses[rng.Next(addresses.Count)].Id,
+                    IsMainAddress = false
+                });
+            }
+        }
+
         db.CustomerAddresses.AddRange(customerAddresses);
         await db.SaveChangesAsync(ct);
 
@@ -237,5 +295,94 @@ public static class SeedData
         db.OrderedProducts.AddRange(allOrderedProducts);
         db.OrderStatusLogs.AddRange(allLogs);
         await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task<List<GiftCard>> SeedGiftCardsAsync(AppDbContext db, CancellationToken ct)
+    {
+        var giftCards = new List<GiftCard>
+    {
+        new GiftCard
+        {
+            Amount = 200,
+            CurrencyCode = Currency.CZK,
+            ValidFrom = DateTime.UtcNow.AddDays(-10),
+            ValidTo = DateTime.UtcNow.AddDays(30)
+        },
+        new GiftCard
+        {
+            Amount = 500,
+            CurrencyCode = Currency.CZK,
+            ValidFrom = DateTime.UtcNow,
+            ValidTo = DateTime.UtcNow.AddMonths(2)
+        }
+    };
+
+        db.GiftCards.AddRange(giftCards);
+        await db.SaveChangesAsync(ct);
+        return giftCards;
+    }
+    private static async Task SeedGiftCardCouponsAsync(AppDbContext db, List<GiftCard> giftCards, CancellationToken ct)
+    {
+        var faker = new Faker();
+
+        var coupons = new List<GiftCardCoupon>();
+
+        foreach (var giftCard in giftCards)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                coupons.Add(new GiftCardCoupon
+                {
+                    GiftCardId = giftCard.Id,
+                    CouponCode = faker.Random.AlphaNumeric(10).ToUpper()
+                });
+            }
+        }
+
+        db.GiftCardCoupons.AddRange(coupons);
+        await db.SaveChangesAsync(ct);
+    }
+    public static async Task SeedTestLoginWithOrdersAsync(IServiceProvider services, AppDbContext db)
+    {
+        var userManager = services.GetRequiredService<UserManager<LocalIdentityUser>>();
+
+        var customerIdWithOrders = db.Orders
+            .Select(o => o.CustomerId)
+            .First(); 
+
+        const string email = "test@test.com";
+        const string password = "Test123!";
+
+        var existing = await userManager.FindByEmailAsync(email);
+        if (existing != null)
+        {
+            existing.CustomerId = customerIdWithOrders;
+            await userManager.UpdateAsync(existing);
+            return;
+        }
+
+        var user = new LocalIdentityUser
+        {
+            UserName = email,
+            Email = email,
+            CustomerId = customerIdWithOrders
+        };
+
+        await userManager.CreateAsync(user, password);
+    }
+
+    public static async Task SeedRoles(IServiceProvider serviceProvider)
+    {
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        if (!await roleManager.RoleExistsAsync("Employee"))
+        {
+            await roleManager.CreateAsync(new IdentityRole("Employee"));
+        }
+
+        if (!await roleManager.RoleExistsAsync("User"))
+        {
+            await roleManager.CreateAsync(new IdentityRole("User"));
+        }
     }
 }

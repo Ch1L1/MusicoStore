@@ -6,6 +6,7 @@ namespace MusicoStore.Domain.Interfaces.Service;
 public interface IProductService
 {
     public Task<List<ProductDTO>> FilterAsync(ProductFilterRequestDTO filter, CancellationToken ct);
+    public Task<PagedResult<ProductDTO>> FilterPagedAsync(ProductFilterRequestDTO filter, int page = 1, int pageSize = 10, CancellationToken ct = default);
     public Task<ProductDTO> FindByIdAsync(int id, CancellationToken ct);
     public bool DoesExistById(int id);
     public Task<ProductDTO> CreateAsync(CreateProductDTO dto, int editedByCustomerId, CancellationToken ct);

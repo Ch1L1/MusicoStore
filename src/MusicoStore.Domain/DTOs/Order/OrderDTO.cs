@@ -10,5 +10,8 @@ public class OrderDTO
     public string CurrentState { get; set; } = null!;
     public decimal TotalAmount { get; set; }
 
+    public string? GiftCardCouponCode { get; set; }
+    public decimal? GiftCardAmount { get; set; }
+
     public IEnumerable<OrderItemDTO>? Items { get; set; }
 }

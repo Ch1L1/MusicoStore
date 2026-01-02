@@ -9,11 +9,13 @@ namespace MusicoStore.BusinessLayer.Services;
 public class OrderService(
     IRepository<Order> orderRepository,
     IRepository<OrderedProduct> orderedProductRepository,
-    IRepository<OrderStatusLog> orderStatusLogRepository,
+    IOrderStatusLogRepository orderStatusLogRepository,
     IRepository<OrderState> orderStateRepository,
     IProductRepository productRepository,
     IStockRepository stockRepository,
     ICustomerAddressRepository customerAddressRepository,
+    IGiftCardCouponRepository giftCardCouponRepository,
+    IGiftCardService giftCardService,
     IMapper mapper)
     : IOrderService
 {
@@ -184,7 +186,21 @@ public class OrderService(
             .ToList();
 
         dto.Items = items;
-        dto.TotalAmount = items.Sum(i => i.LineTotal);
+        var total = items.Sum(i => i.LineTotal);
+
+        if (order.GiftCardCoupon != null)
+        {
+            total -= order.GiftCardCoupon.GiftCard.Amount;
+            total = Math.Max(total, 0);
+        }
+
+        dto.TotalAmount = total;
+
+        if (order.GiftCardCoupon?.GiftCard != null)
+        {
+            dto.GiftCardCouponCode = order.GiftCardCoupon.CouponCode;
+            dto.GiftCardAmount = order.GiftCardCoupon.GiftCard.Amount;
+        }
 
         var logsForOrder = (order.StatusLog ?? new List<OrderStatusLog>())
             .OrderBy(l => l.LogTime)
@@ -203,5 +219,85 @@ public class OrderService(
         }
 
         return dto;
+    }
+
+    public async Task ApplyGiftCardAsync(
+    int orderId,
+    string couponCode,
+    CancellationToken ct)
+    {
+        Order? order = await orderRepository.GetByIdAsync(orderId, ct)
+            ?? throw new KeyNotFoundException($"Order {orderId} not found");
+
+        if (order.GiftCardCoupon != null)
+        {
+            throw new InvalidOperationException("A gift card is already applied to this order.");
+        }
+
+        IReadOnlyList<GiftCardCoupon> coupons = await giftCardCouponRepository.GetAllAsync(ct);
+
+        GiftCardCoupon? coupon = coupons.FirstOrDefault(c => c.CouponCode == couponCode);
+
+        if (coupon is null)
+        {
+            throw new KeyNotFoundException("Coupon code does not exist.");
+        }
+
+        if (coupon.OrderId.HasValue)
+        {
+            throw new InvalidOperationException("This coupon has already been used.");
+        }
+
+        if (!await IsOrderInCreatedStateAsync(order.Id, ct))
+        {
+            throw new InvalidOperationException("Gift card can only be applied while the order is in Created state.");
+        }
+
+        var now = DateTime.UtcNow;
+        if (now < coupon.GiftCard.ValidFrom || now > coupon.GiftCard.ValidTo)
+        {
+            throw new InvalidOperationException("Gift card is not valid.");
+        }
+
+        await giftCardService.ApplyAsync(coupon, order.Id, ct);
+        
+        order.GiftCardCoupon = coupon;
+        await orderRepository.UpdateAsync(order, ct);
+    }
+
+    public async Task RemoveGiftCardAsync(int orderId, CancellationToken ct)
+    {
+        if (!await IsOrderInCreatedStateAsync(orderId, ct))
+        {
+            throw new InvalidOperationException("Gift card can only be removed while the order is in Created state.");
+        }
+
+        GiftCardCoupon? coupon =
+            await giftCardCouponRepository.GetByOrderIdAsync(orderId, ct);
+
+        if (coupon == null)
+        {
+            throw new InvalidOperationException("No gift card is applied to this order.");
+        }
+
+        coupon.OrderId = null;
+
+        await giftCardCouponRepository.UpdateAsync(coupon, ct);
+    }
+
+    public async Task<List<string>> GetOrderStates(CancellationToken ct)
+    {
+        IReadOnlyList<OrderState> states = await orderStateRepository.GetAllAsync(ct);
+        return states.OrderBy((state => state.Id)).Select((state => state.Name)).ToList();
+    }
+
+
+    private async Task<bool> IsOrderInCreatedStateAsync(
+    int orderId,
+    CancellationToken ct)
+    {
+        var stateName = await orderStatusLogRepository.GetLatestStateNameAsync(orderId, ct);
+
+        return stateName == "Created";
     }
 }

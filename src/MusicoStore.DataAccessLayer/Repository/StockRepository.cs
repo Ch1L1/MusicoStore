@@ -13,7 +13,8 @@ public class StockRepository(AppDbContext db) : GenericRepository<Stock>(db), IS
             .Include(s => s.Product)
                 .ThenInclude(p => p.Manufacturer)
             .Include(s => s.Product)
-                .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .ToListAsync(ct);
 
@@ -23,7 +24,8 @@ public class StockRepository(AppDbContext db) : GenericRepository<Stock>(db), IS
             .Include(s => s.Product)
                 .ThenInclude(p => p.Manufacturer)
             .Include(s => s.Product)
-                .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
@@ -34,7 +36,8 @@ public class StockRepository(AppDbContext db) : GenericRepository<Stock>(db), IS
             .Include(s => s.Product)
                 .ThenInclude(p => p.Manufacturer)
             .Include(s => s.Product)
-                .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsQueryable();
 
         if (filter.storageId.HasValue)

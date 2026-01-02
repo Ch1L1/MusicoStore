@@ -10,7 +10,8 @@ public class ManufacturerRepository(AppDbContext db) : GenericRepository<Manufac
         => await Db.Manufacturers
             .Include(m => m.Address)
             .Include(m => m.Products)
-                .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .ToListAsync(ct);
 
@@ -18,7 +19,8 @@ public class ManufacturerRepository(AppDbContext db) : GenericRepository<Manufac
         => Db.Manufacturers
             .Include(m => m.Address)
             .Include(m => m.Products)
-                .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == id, ct);
 }

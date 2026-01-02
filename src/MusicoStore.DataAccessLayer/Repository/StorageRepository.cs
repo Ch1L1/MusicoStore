@@ -12,8 +12,9 @@ public class StorageRepository(AppDbContext db) : GenericRepository<Storage>(db)
                 .ThenInclude(st => st.Product)
                     .ThenInclude(p => p.Manufacturer)
             .Include(s => s.Stocks)
-                .ThenInclude(st => st.Product)
-                    .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(s => s.Product)
+                    .ThenInclude(p => p.CategoryAssignments)
+                        .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .ToListAsync(ct);
 
@@ -24,8 +25,9 @@ public class StorageRepository(AppDbContext db) : GenericRepository<Storage>(db)
                 .ThenInclude(st => st.Product)
                     .ThenInclude(p => p.Manufacturer)
             .Include(s => s.Stocks)
-                .ThenInclude(st => st.Product)
-                    .ThenInclude(p => p.ProductCategory)
+                .ThenInclude(s => s.Product)
+                    .ThenInclude(p => p.CategoryAssignments)
+                        .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 }

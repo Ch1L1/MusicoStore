@@ -36,7 +36,14 @@ public class MappingProfile : Profile
 
         CreateMap<Product, ProductDTO>()
             .ForMember(d => d.ProductId, o => o.MapFrom(s => s.Id))
-            .ForMember(d => d.Category, o => o.MapFrom(s => s.ProductCategory))
+            .ForMember(d => d.Categories, o =>
+                    o.MapFrom(s =>
+                        s.CategoryAssignments.Select(a => new ProductCategoryDTO
+                        {
+                            CategoryId = a.ProductCategoryId,
+                            Name = a.ProductCategory.Name,
+                            IsPrimary = a.IsPrimary
+                        })))
             .ForMember(d => d.Manufacturer, o => o.MapFrom(s => s.Manufacturer))
             .ForMember(d => d.ImagePath, o => o.MapFrom(s => s.ImagePath))
             .ForMember(d => d.EditCount, o => o.MapFrom(s => s.EditLogs.Count))
@@ -54,14 +61,18 @@ public class MappingProfile : Profile
         CreateMap<Product, ProductSummaryForManufacturerDTO>()
             .ForMember(d => d.ProductId, o => o.MapFrom(s => s.Id))
             .ForMember(d => d.CategoryName,
-                o => o.MapFrom(s => s.ProductCategory != null ? s.ProductCategory.Name : null));
+               o => o.MapFrom(s =>
+                    s.CategoryAssignments
+                        .FirstOrDefault(a => a.IsPrimary) != null
+                            ? s.CategoryAssignments.First(a => a.IsPrimary).ProductCategory.Name
+                            : null));
 
         CreateMap<CreateProductDTO, Product>();
         CreateMap<UpdateProductDTO, Product>();
 
         CreateMap<ProductCategory, ProductCategoryDTO>()
             .ForMember(d => d.CategoryId, o => o.MapFrom(s => s.Id))
-            .ForMember(d => d.Products, o => o.MapFrom(s => s.Products));
+            .ForMember(d => d.Products, o => o.MapFrom(s => s.CategoryAssignments.Select(a => a.Product)));
 
         CreateMap<ProductCategory, ProductCategorySummaryDTO>()
             .ForMember(d => d.CategoryId, o => o.MapFrom(s => s.Id))
@@ -102,7 +113,11 @@ public class MappingProfile : Profile
             .ForMember(d => d.ManufacturerName,
                 o => o.MapFrom(s => s.Manufacturer != null ? s.Manufacturer.Name : null))
             .ForMember(d => d.CategoryName,
-                o => o.MapFrom(s => s.ProductCategory != null ? s.ProductCategory.Name : null));
+                o => o.MapFrom(s =>
+                    s.CategoryAssignments
+                        .FirstOrDefault(a => a.IsPrimary) != null
+                            ? s.CategoryAssignments.First(a => a.IsPrimary).ProductCategory.Name
+                            : null));
 
         CreateMap<Customer, CustomerDTO>()
             .ForMember(dest => dest.Employee, opt => opt.MapFrom(src => src.IsEmployee))

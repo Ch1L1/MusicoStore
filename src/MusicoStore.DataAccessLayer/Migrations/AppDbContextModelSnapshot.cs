@@ -17,10 +17,43 @@ namespace MusicoStore.DataAccessLayer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("GiftCardCoupon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CouponCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("GiftCardId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CouponCode")
+                        .IsUnique();
+
+                    b.HasIndex("GiftCardId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasFilter("[OrderId] IS NOT NULL");
+
+                    b.ToTable("GiftCardCoupon", (string)null);
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -332,6 +365,35 @@ namespace MusicoStore.DataAccessLayer.Migrations
                     b.ToTable("CustomerAddress", (string)null);
                 });
 
+            modelBuilder.Entity("MusicoStore.Domain.Entities.GiftCard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)")
+                        .HasDefaultValue("USD");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GiftCard", (string)null);
+                });
+
             modelBuilder.Entity("MusicoStore.Domain.Entities.Manufacturer", b =>
                 {
                     b.Property<int>("Id")
@@ -486,14 +548,9 @@ namespace MusicoStore.DataAccessLayer.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ProductCategoryId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ManufacturerId");
-
-                    b.HasIndex("ProductCategoryId");
 
                     b.ToTable("Product", (string)null);
                 });
@@ -514,6 +571,28 @@ namespace MusicoStore.DataAccessLayer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductCategory", (string)null);
+                });
+
+            modelBuilder.Entity("MusicoStore.Domain.Entities.ProductCategoryAssignment", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.HasKey("ProductId", "ProductCategoryId");
+
+                    b.HasIndex("ProductCategoryId");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique()
+                        .HasFilter("[IsPrimary] = 1");
+
+                    b.ToTable("ProductCategoryAssignment", (string)null);
                 });
 
             modelBuilder.Entity("MusicoStore.Domain.Entities.ProductEditLog", b =>
@@ -599,6 +678,24 @@ namespace MusicoStore.DataAccessLayer.Migrations
                     b.ToTable("Storage", (string)null);
                 });
 
+            modelBuilder.Entity("GiftCardCoupon", b =>
+                {
+                    b.HasOne("MusicoStore.Domain.Entities.GiftCard", "GiftCard")
+                        .WithMany("Coupons")
+                        .HasForeignKey("GiftCardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MusicoStore.Domain.Entities.Order", "Order")
+                        .WithOne("GiftCardCoupon")
+                        .HasForeignKey("GiftCardCoupon", "OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("GiftCard");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -655,7 +752,7 @@ namespace MusicoStore.DataAccessLayer.Migrations
                     b.HasOne("MusicoStore.Domain.Entities.Customer", "Customer")
                         .WithOne()
                         .HasForeignKey("MusicoStore.DataAccessLayer.Identity.LocalIdentityUser", "CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Customer");
@@ -756,13 +853,24 @@ namespace MusicoStore.DataAccessLayer.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Manufacturer");
+                });
+
+            modelBuilder.Entity("MusicoStore.Domain.Entities.ProductCategoryAssignment", b =>
+                {
                     b.HasOne("MusicoStore.Domain.Entities.ProductCategory", "ProductCategory")
-                        .WithMany("Products")
+                        .WithMany("CategoryAssignments")
                         .HasForeignKey("ProductCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Manufacturer");
+                    b.HasOne("MusicoStore.Domain.Entities.Product", "Product")
+                        .WithMany("CategoryAssignments")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
 
                     b.Navigation("ProductCategory");
                 });
@@ -830,6 +938,11 @@ namespace MusicoStore.DataAccessLayer.Migrations
                     b.Navigation("Orders");
                 });
 
+            modelBuilder.Entity("MusicoStore.Domain.Entities.GiftCard", b =>
+                {
+                    b.Navigation("Coupons");
+                });
+
             modelBuilder.Entity("MusicoStore.Domain.Entities.Manufacturer", b =>
                 {
                     b.Navigation("Products");
@@ -837,6 +950,8 @@ namespace MusicoStore.DataAccessLayer.Migrations
 
             modelBuilder.Entity("MusicoStore.Domain.Entities.Order", b =>
                 {
+                    b.Navigation("GiftCardCoupon");
+
                     b.Navigation("OrderedProducts");
 
                     b.Navigation("StatusLog");
@@ -849,6 +964,8 @@ namespace MusicoStore.DataAccessLayer.Migrations
 
             modelBuilder.Entity("MusicoStore.Domain.Entities.Product", b =>
                 {
+                    b.Navigation("CategoryAssignments");
+
                     b.Navigation("EditLogs");
 
                     b.Navigation("Stocks");
@@ -856,7 +973,7 @@ namespace MusicoStore.DataAccessLayer.Migrations
 
             modelBuilder.Entity("MusicoStore.Domain.Entities.ProductCategory", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("CategoryAssignments");
                 });
 
             modelBuilder.Entity("MusicoStore.Domain.Entities.Storage", b =>

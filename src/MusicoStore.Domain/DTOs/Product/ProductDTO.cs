@@ -12,7 +12,7 @@ public class ProductDTO
     public string Description { get; set; }
     public decimal CurrentPrice { get; set; }
     public Currency CurrencyCode { get; set; }
-    public ProductCategorySummaryDTO? Category { get; set; }
+    public List<ProductCategoryDTO> Categories { get; set; }
     public ManufacturerSummaryDTO? Manufacturer { get; set; }
     public List<StockSummaryForProductDTO> Stocks { get; set; }
     public string? ImagePath { get; set; }

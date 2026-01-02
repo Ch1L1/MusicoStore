@@ -9,16 +9,18 @@ public class OrderedProductRepository(AppDbContext db) : GenericRepository<Order
     public override async Task<IReadOnlyList<OrderedProduct>> GetAllAsync(CancellationToken ct)
         => await Db.OrderedProducts
             .Include(op => op.Order)
-            .Include(op => op.Product)
-                .ThenInclude(p => p.ProductCategory)
+            .Include(m => m.Product)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .ToListAsync(ct);
 
     public override Task<OrderedProduct?> GetByIdAsync(int id, CancellationToken ct)
         => Db.OrderedProducts
             .Include(op => op.Order)
-            .Include(op => op.Product)
-                .ThenInclude(p => p.ProductCategory)
+            .Include(m => m.Product)
+                .ThenInclude(p => p.CategoryAssignments)
+                    .ThenInclude(a => a.ProductCategory)
             .AsNoTracking()
             .FirstOrDefaultAsync(op => op.Id == id, ct);
 }

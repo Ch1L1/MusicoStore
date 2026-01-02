@@ -11,6 +11,7 @@
       <ProjectReference Include="..\MusicoStore.BusinessLayer\MusicoStore.BusinessLayer.csproj" />
       <ProjectReference Include="..\MusicoStore.DataAccessLayer\MusicoStore.DataAccessLayer.csproj" />
       <ProjectReference Include="..\MusicoStore.Domain\MusicoStore.Domain.csproj" />
+      <ProjectReference Include="..\MusicoStore.Mongo\MusicoStore.Mongo.csproj" />
     </ItemGroup>
 
     <ItemGroup>
