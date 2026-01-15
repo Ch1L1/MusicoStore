@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MusicoStore.Domain.Constants;
 
 namespace WebMVC.Models.Account;
 
@@ -28,5 +29,22 @@ public class RegisterViewModel
     
     [Required]
     public bool Employee { get; set; }
+    
+    [Required]
+    public string StreetName { get; set; }
+
+    [Required]
+    public string StreetNumber { get; set; }
+
+    [Required]
+    public string City { get; set; }
+
+    [Required]
+    [StringLength(maximumLength: 6, ErrorMessage = "PostalNumber must be max. 6 characters")]
+    public string PostalNumber { get; set; }
+
+    [Required]
+    [StringLength(3, ErrorMessage = "Country code must be 3 letters (e.g. CZE, USA)")]
+    public string CountryCode { get; set; }
 }
 

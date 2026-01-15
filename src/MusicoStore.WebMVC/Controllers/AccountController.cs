@@ -41,23 +41,21 @@ public class AccountController(
                 Employee = model.Employee
             },
             CancellationToken.None);
-
-
-        var addressDto = new UpsertCustomerAddressDTO // Workaround: create a dummy address for new user...
+        
+        var addressDto = new UpsertCustomerAddressDTO
         {
+            IsMainAddress = true, 
             NewAddress = new CreateAddressDTO
             {
-                City = "Default City",
-                CountryCode = "CZK",
-                StreetName = "Default Street",
-                StreetNumber = "1",
-                PostalNumber = "12345"
-            },
-            IsMainAddress = true
+                StreetName = model.StreetName,
+                StreetNumber = model.StreetNumber,
+                City = model.City,
+                PostalNumber = model.PostalNumber,
+                CountryCode = model.CountryCode
+            }
         };
 
         await addressService.AddAddressAsync(createdCustomerDto.Id, addressDto, CancellationToken.None);
-
 
         var user = new LocalIdentityUser
         {
