@@ -49,6 +49,14 @@
                             </a>
                         </li>
                     }
+                    @if (SignInManager.IsSignedIn(User) && !User.IsInRole("Employee"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Order" asp-action="Checkout">
+                                Create order
+                            </a>
+                        </li>
+                    }
                     @if (User.IsInRole("Employee"))
                     {
                         <li class="nav-item">

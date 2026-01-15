@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MusicoStore.DataAccessLayer.Identity;
 using MusicoStore.Domain.DTOs;
 using MusicoStore.Domain.DTOs.Order;
 using MusicoStore.Domain.DTOs.Product;
@@ -9,10 +11,10 @@ using WebMVC.Models.Orders;
 
 namespace WebMVC.Controllers;
 
-[Authorize(Roles = "Employee")]
 [Route("orders")]
-public class OrderController(IOrderService orderService, IProductService productService) : Controller
+public class OrderController(IOrderService orderService, IProductService productService, UserManager<LocalIdentityUser> userManager) : Controller
 {
+    [Authorize(Roles = "Employee")]
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -31,12 +33,23 @@ public class OrderController(IOrderService orderService, IProductService product
         return View(vms);
     }
 
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
         try
         {
             OrderDTO dto = await orderService.FindByIdAsync(id, ct);
+            
+            if (!User.IsInRole("Employee"))
+            {
+                LocalIdentityUser? user = await userManager.GetUserAsync(User);
+                if (user == null || dto.CustomerId != user.CustomerId)
+                {
+                    return Forbid();
+                }
+            }
+            
             List<string> states = await orderService.GetOrderStates(ct);
 
             var statesToSelect =
@@ -55,6 +68,7 @@ public class OrderController(IOrderService orderService, IProductService product
         }
     }
 
+    [Authorize(Roles = "Employee")]
     [HttpPost("change-state")]
     public async Task<IActionResult> ChangeState(int orderId, int newStateId, CancellationToken ct)
     {
@@ -71,6 +85,7 @@ public class OrderController(IOrderService orderService, IProductService product
         return RedirectToAction(nameof(Details), new { id = orderId });
     }
 
+    [Authorize(Roles = "Employee")]
     [HttpGet("create")]
     public async Task<IActionResult> Create()
     {
@@ -82,6 +97,7 @@ public class OrderController(IOrderService orderService, IProductService product
         return View(vm);
     }
 
+    [Authorize(Roles = "Employee")]
     [HttpPost("create")]
     public async Task<IActionResult> Create(OrderCreateViewModel model, CancellationToken ct)
     {
@@ -103,6 +119,83 @@ public class OrderController(IOrderService orderService, IProductService product
             var createDto = new CreateOrderDTO
             {
                 CustomerId = model.CustomerId,
+                Items = model.Items.Select(i => new CreateOrderItemDTO
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity
+                }).ToList()
+            };
+
+            OrderDTO createdOrder = await orderService.CreateAsync(createDto, ct);
+
+            if (string.IsNullOrWhiteSpace(model.CouponCode))
+            {
+                return RedirectToAction(nameof(Details), new { id = createdOrder.OrderId });
+            }
+
+            try
+            {
+                await orderService.ApplyGiftCardAsync(createdOrder.OrderId, model.CouponCode.Trim(), ct);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(ex.GetHashCode().ToString(),
+                    $"Order created, but error applying git card: {ex.Message}");
+            }
+
+            return RedirectToAction(nameof(Details), new { id = createdOrder.OrderId });
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(ex.GetHashCode().ToString(), "Error creating order: " + ex.Message);
+            await LoadFormDropdowns(model, ct);
+            return View(model);
+        }
+    }
+    
+    [Authorize]
+    [HttpGet("checkout")]
+    public async Task<IActionResult> Checkout(CancellationToken ct)
+    {
+        var vm = new OrderCreateViewModel();
+        
+        vm.Items.Add(new OrderItemCreateViewModel { Quantity = 1 });
+        await LoadFormDropdowns(vm, ct);
+        
+        return View(vm);
+    }
+
+    [Authorize]
+    [HttpPost("checkout")]
+    public async Task<IActionResult> Checkout(OrderCreateViewModel model, CancellationToken ct)
+    {
+        LocalIdentityUser? user = await userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Forbid();
+        }
+
+        model.CustomerId = user.CustomerId;
+        
+        ModelState.Remove(nameof(model.CustomerId)); // remove customerId validation, we set it explicitly
+        
+        model.Items.RemoveAll(i => i.ProductId == 0);
+        if (model.Items.Count == 0)
+        {
+            ModelState.AddModelError("", "Order items cannot be empty");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await LoadFormDropdowns(model, ct);
+            return View(model);
+        }
+
+        try
+        {
+            var createDto = new CreateOrderDTO
+            {
+                CustomerId = user.CustomerId,
                 Items = model.Items.Select(i => new CreateOrderItemDTO
                 {
                     ProductId = i.ProductId,

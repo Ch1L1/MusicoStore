@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using MusicoStore.DataAccessLayer.Identity;
+using MusicoStore.Domain.DTOs.Address;
 using MusicoStore.Domain.DTOs.Customer;
+using MusicoStore.Domain.DTOs.CustomerAddress;
 using MusicoStore.Domain.Interfaces.Service;
 using WebMVC.Models.Account;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
@@ -13,6 +15,7 @@ public class AccountController(
     UserManager<LocalIdentityUser> userManager,
     SignInManager<LocalIdentityUser> signInManager,
     ICustomerService customerService,
+    ICustomerAddressService addressService,
     IEmailSender emailSender)
     : Controller
 {
@@ -30,14 +33,31 @@ public class AccountController(
         }
 
         CustomerDTO createdCustomerDto = await customerService.CreateAsync(new CreateCustomerDTO
-        {
-            Email = model.Email,
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            PhoneNumber = model.PhoneNumber,
-            Employee = model.Employee
-        },
+            {
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PhoneNumber = model.PhoneNumber,
+                Employee = model.Employee
+            },
             CancellationToken.None);
+
+
+        var addressDto = new UpsertCustomerAddressDTO // Workaround: create a dummy address for new user...
+        {
+            NewAddress = new CreateAddressDTO
+            {
+                City = "Default City",
+                CountryCode = "CZK",
+                StreetName = "Default Street",
+                StreetNumber = "1",
+                PostalNumber = "12345"
+            },
+            IsMainAddress = true
+        };
+
+        await addressService.AddAddressAsync(createdCustomerDto.Id, addressDto, CancellationToken.None);
+
 
         var user = new LocalIdentityUser
         {
@@ -63,7 +83,7 @@ public class AccountController(
         {
             ModelState.AddModelError(string.Empty, error.Description);
         }
-        
+
         await userManager.DeleteAsync(user);
         return View(model);
     }
@@ -104,7 +124,7 @@ public class AccountController(
     {
         return View();
     }
-    
+
     [HttpGet]
     public IActionResult ForgotPassword()
     {
@@ -126,14 +146,14 @@ public class AccountController(
         }
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            
-        var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { token, email = user.Email }, Request.Scheme);
+
+        var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { token, email = user.Email },
+            Request.Scheme);
 
         await emailSender.SendEmailAsync(model.Email, "Reset Password",
             $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
 
         return RedirectToAction(nameof(ForgotPasswordConfirmation));
-
     }
 
     public IActionResult ForgotPasswordConfirmation()
@@ -182,6 +202,7 @@ public class AccountController(
         {
             ModelState.AddModelError(string.Empty, error.Description);
         }
+
         return View(model);
     }
 

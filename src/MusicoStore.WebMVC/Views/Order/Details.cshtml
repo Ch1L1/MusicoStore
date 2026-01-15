@@ -7,22 +7,28 @@
         <span class="badge bg-info fs-5">@Model.Order.CurrentState</span>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body bg-light">
-            <form asp-action="ChangeState" method="post" class="row g-3 align-items-center">
-                <input type="hidden" name="orderId" value="@Model.Order.OrderId"/>
-                <div class="col-auto">
-                    <label class="col-form-label fw-bold">Change State:</label>
-                </div>
-                <div class="col-auto">
-                    <select name="newStateId" asp-items="Model.AvailableStates" class="form-select"></select>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Update</button>
-                </div>
-            </form>
+    @if (User.IsInRole("Employee"))
+    {
+        <div class="card mb-4">
+            <div class="card-body bg-light">
+                <form asp-action="ChangeState" method="post" class="row g-3 align-items-center">
+                    <input type="hidden" name="orderId" value="@Model.Order.OrderId"/>
+
+
+                    <div class="col-auto">
+                        <label class="col-form-label fw-bold">Change State:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="newStateId" asp-items="Model.AvailableStates" class="form-select"></select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+
+                </form>
+            </div>
         </div>
-    </div>
+    }
 
     <table class="table table-striped">
         <thead>
