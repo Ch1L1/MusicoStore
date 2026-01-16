@@ -1,12 +1,12 @@
-﻿using MusicoStore.Domain.DTOs.Address;
+﻿    using MusicoStore.Domain.DTOs.Address;
 
-namespace MusicoStore.Domain.DTOs.CustomerAddress;
+    namespace MusicoStore.Domain.DTOs.CustomerAddress;
 
-public class UpsertCustomerAddressDTO
-{
-    public int? ExistingAddressId { get; set; }
+    public class UpsertCustomerAddressDTO
+    {
+        public int? ExistingAddressId { get; set; }
 
-    public CreateAddressDTO? NewAddress { get; set; }
+        public CreateAddressDTO? NewAddress { get; set; }
 
-    public bool IsMainAddress { get; set; }
-}
+        public bool IsMainAddress { get; set; }
+    }

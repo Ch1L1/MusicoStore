@@ -1,32 +1,46 @@
 ﻿@model IEnumerable<WebMVC.Models.Orders.MyOrderViewModel>
 
+@{
+    ViewData["Title"] = "My Orders";
+}
+
 <h2>My Orders</h2>
 
 @if (!Model.Any())
 {
-    <p>You have not placed any orders yet.</p>
+    <div class="alert alert-info">
+        You have not placed any orders yet.
+    </div>
+    <a asp-controller="Order" asp-action="Checkout" class="btn btn-primary">Create First Order</a>
 }
 else
 {
-    <table class="table">
-        <thead>
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
         <tr>
             <th>Order #</th>
             <th>Date</th>
             <th>Status</th>
             <th>Total</th>
-        </tr>
+            <th>Action</th> </tr>
         </thead>
         <tbody>
         @foreach (var order in Model)
         {
             <tr>
-                <td>@order.OrderId</td>
-                <td>@order.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                <td class="fw-bold">@order.OrderId</td>
+                <td>@order.CreatedAt.ToLocalTime().ToString("g")</td>
                 <td>
-                    <span class="badge bg-info">@order.Status</span>
+                    @if(order.Status == "Created") { <span class="badge bg-primary">Created</span> }
+                    else if(order.Status == "Paid") { <span class="badge bg-success">Paid</span> }
+                    else { <span class="badge bg-secondary">@order.Status</span> }
                 </td>
-                <td>@order.TotalAmount.ToString("C")</td>
+                <td class="fw-bold">@order.TotalAmount.ToString("C")</td>
+                <td>
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">
+                        View Details
+                    </a>
+                </td>
             </tr>
         }
         </tbody>
