@@ -1,6 +1,7 @@
 using AutoMapper;
 using Moq;
 using MusicoStore.BusinessLayer.Services;
+using MusicoStore.DataAccessLayer.Enums;
 using MusicoStore.Domain.DTOs.Order;
 using MusicoStore.Domain.Entities;
 using MusicoStore.Domain.Interfaces.Repository;
@@ -19,6 +20,7 @@ public class OrderServiceTests
     private readonly Mock<ICustomerAddressRepository> _customerAddressRepoMock = new();
     private readonly Mock<IGiftCardCouponRepository> _giftCardCouponRepoMock = new();
     private readonly Mock<IGiftCardService> _giftCardServiceMock = new();
+    private readonly Mock<ICurrencyConversionService> _currencyConversionServiceMock = new();
     private readonly Mock<IMapper> _mapperMock = new();
 
     private readonly OrderService _service;
@@ -35,36 +37,52 @@ public class OrderServiceTests
             _customerAddressRepoMock.Object,
             _giftCardCouponRepoMock.Object,
             _giftCardServiceMock.Object,
+             _currencyConversionServiceMock.Object,
             _mapperMock.Object);
         }
 
     [Fact]
-    public async Task FindByIdAsync_ReturnsMappedOrder_WhenExists_AndNoItemsOrLogs()
-        {
+    public async Task FindByIdAsync_ReturnsMappedOrder_WhenExists_WithSingleItem()
+    {
         // Arrange
         var order = new Order
-            {
+        {
             Id = 1,
             CustomerId = 7,
-            CustomerAddressId = 20
-            };
+            CustomerAddressId = 20,
+            OrderedProducts = new List<OrderedProduct>
+        {
+            new OrderedProduct
+            {
+                ProductId = 35,
+                Quantity = 2,
+                PricePerItem = 100m,
+                Product = new Product
+                {
+                    Id = 35,
+                    Name = "Test Product",
+                    CurrencyCode = Currency.USD,
+                    CurrentPrice = 100m
+                }
+            }
+        },
+            StatusLog = new List<OrderStatusLog>()
+        };
 
         _orderRepoMock
             .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
-        _orderedProductRepoMock
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<OrderedProduct>());
-        _productRepoMock
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Product>());
-        _orderStatusLogRepoMock
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<OrderStatusLog>());
 
         _mapperMock
             .Setup(m => m.Map<OrderDTO>(order))
             .Returns(new OrderDTO());
+
+        _currencyConversionServiceMock
+            .Setup(c => c.Convert(
+                It.IsAny<decimal>(),
+                It.IsAny<Currency>(),
+                It.IsAny<Currency>()))
+            .Returns((decimal amount, Currency _, Currency __) => amount);
 
         // Act
         var dto = await _service.FindByIdAsync(1, CancellationToken.None);
@@ -74,12 +92,12 @@ public class OrderServiceTests
         Assert.Equal(7, dto.CustomerId);
         Assert.Equal(20, dto.CustomerAddressId);
         Assert.Equal("Unknown", dto.CurrentState);
-        Assert.Equal(0m, dto.TotalAmount);
-        Assert.False(dto.Items?.Any() ?? false);
+        Assert.Equal(200m, dto.TotalAmount);
+        Assert.Single(dto.Items);
 
         _orderRepoMock.Verify(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         _mapperMock.Verify(m => m.Map<OrderDTO>(order), Times.Once);
-        }
+    }
 
     [Fact]
     public async Task FindByIdAsync_Throws_WhenOrderNotFound()

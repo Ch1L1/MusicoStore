@@ -3,6 +3,7 @@ using MusicoStore.Domain.DTOs.Order;
 using MusicoStore.Domain.Entities;
 using MusicoStore.Domain.Interfaces.Repository;
 using MusicoStore.Domain.Interfaces.Service;
+using MusicoStore.DataAccessLayer.Enums;
 
 namespace MusicoStore.BusinessLayer.Services;
 
@@ -16,6 +17,7 @@ public class OrderService(
     ICustomerAddressRepository customerAddressRepository,
     IGiftCardCouponRepository giftCardCouponRepository,
     IGiftCardService giftCardService,
+    ICurrencyConversionService currencyConversionService,
     IMapper mapper)
     : IOrderService
 {
@@ -188,9 +190,57 @@ public class OrderService(
         dto.Items = items;
         var total = items.Sum(i => i.LineTotal);
 
+
+        if (order.OrderedProducts == null || !order.OrderedProducts.Any())
+        {
+            throw new InvalidOperationException("Order has no items.");
+        }
+
+        var currencies = new HashSet<Currency>();
+
+        foreach (var op in order.OrderedProducts)
+        {
+            if (op.Product == null)
+            {
+                var product = await productRepository.GetByIdAsync(op.ProductId, ct);
+
+                if (product == null)
+                {
+                    throw new InvalidOperationException($"Product {op.ProductId} not found.");
+                }
+
+                currencies.Add(product.CurrencyCode);
+            }
+            else
+            {
+                currencies.Add(op.Product.CurrencyCode);
+            }
+        }
+
+        if (currencies.Count == 0)
+        {
+            throw new InvalidOperationException("Order has no items with a defined currency.");
+        }
+
+        if (currencies.Count > 1)
+        {
+            throw new InvalidOperationException(
+                "Order contains items with multiple currencies. A single currency is expected.");
+        }
+
+        var targetCurrency = currencies.First();
+
         if (order.GiftCardCoupon != null)
         {
-            total -= order.GiftCardCoupon.GiftCard.Amount;
+            var gift = order.GiftCardCoupon.GiftCard;
+
+            var convertedGiftAmount =
+                currencyConversionService.Convert(
+                    gift.Amount,
+                    gift.CurrencyCode,
+                    targetCurrency);
+
+            total -= convertedGiftAmount;
             total = Math.Max(total, 0);
         }
 
@@ -199,7 +249,9 @@ public class OrderService(
         if (order.GiftCardCoupon?.GiftCard != null)
         {
             dto.GiftCardCouponCode = order.GiftCardCoupon.CouponCode;
-            dto.GiftCardAmount = order.GiftCardCoupon.GiftCard.Amount;
+            var gift = order.GiftCardCoupon.GiftCard;
+            var convertedGiftAmount = currencyConversionService.Convert(gift.Amount, gift.CurrencyCode, targetCurrency);
+            dto.GiftCardAmount = convertedGiftAmount;
         }
 
         var logsForOrder = (order.StatusLog ?? new List<OrderStatusLog>())

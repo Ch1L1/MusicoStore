@@ -15,7 +15,8 @@ public class ProductService(
     IMapper mapper,
     IRepository<Customer> customerRepository,
     IRepository<ProductEditLog> productEditLogRepository,
-    IFileStorageService fileStorageService
+    IFileStorageService fileStorageService,
+    ICurrencyConversionService currencyConversionService
     ) : IProductService
 {
     public async Task<List<ProductDTO>> FilterAsync(ProductFilterRequestDTO filterDto, CancellationToken ct)

@@ -69,6 +69,7 @@ builder.Services.AddScoped<IStoragePathProvider, WebRootPathProvider>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IGiftCardService, GiftCardService>();
 builder.Services.AddScoped<IProductCategoryAssignmentService, ProductCategoryAssignmentService>();
+builder.Services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
