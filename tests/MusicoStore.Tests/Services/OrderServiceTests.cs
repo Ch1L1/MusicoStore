@@ -19,6 +19,7 @@ public class OrderServiceTests
     private readonly Mock<ICustomerAddressRepository> _customerAddressRepoMock = new();
     private readonly Mock<IGiftCardCouponRepository> _giftCardCouponRepoMock = new();
     private readonly Mock<IGiftCardService> _giftCardServiceMock = new();
+    private readonly Mock<ICurrencyConversionService> _currencyConversionServiceMock = new();
     private readonly Mock<IMapper> _mapperMock = new();
 
     private readonly OrderService _service;
@@ -35,6 +36,7 @@ public class OrderServiceTests
             _customerAddressRepoMock.Object,
             _giftCardCouponRepoMock.Object,
             _giftCardServiceMock.Object,
+             _currencyConversionServiceMock.Object,
             _mapperMock.Object);
         }
 
