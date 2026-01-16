@@ -217,8 +217,6 @@ public class OrderService(
             }
         }
 
-        Console.WriteLine($"Distinct currencies count: {currencies.Count}");
-
         if (currencies.Count == 0)
         {
             throw new InvalidOperationException("Order has no items with a defined currency.");
