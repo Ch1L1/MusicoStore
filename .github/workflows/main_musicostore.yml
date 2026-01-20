@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET
+      - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.x'
@@ -26,8 +26,8 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish WebMVC
-        run: dotnet publish src/MusicoStore.WebMVC/MusicoStore.WebMVC.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -51,16 +51,15 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F86075284EB94E3D8428ECAD02253D1F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_872B6D20A36C453F9B0E668B498E7BF8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FBF78B4F4A124B879A23AAB712C1FC7D }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2A8C5A005C1B4F948532F6AE0FF83828 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A3CEF714011347F1B7BF10C3C018E2C1 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5372D6A92D6041678389CF864B1779B1 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'musicostore'
+          slot-name: 'Production'
           package: .
-
           
-
