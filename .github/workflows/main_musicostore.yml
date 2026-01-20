@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core app to Azure Web App - musicostore
+name: Build and deploy ASP.Net Core app to Azure Web App - musicostore
 
 on:
   push:
@@ -9,46 +9,44 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
 
-      - name: Set up .NET Core
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Ensure this matches your project (e.g., 6.0, 7.0, or 8.0)
+          dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Build solution
+        run: dotnet build MusicoStore.sln -c Release
 
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+      - name: Publish WebMVC
+        run: dotnet publish src/MusicoStore.WebMVC/MusicoStore.WebMVC.csproj -c Release -o ${{ env.DOTNET_ROOT }}/myapp
 
-      - name: Publish
-        run: dotnet publish src/MusicoStore.WebMVC/MusicoStore.WebMVC.csproj -c Release -o ./publish
-
-      - name: Upload artifact for deployment job
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: webapp
-          path: ./publish
+          name: app
+          path: ${{ env.DOTNET_ROOT }}/myapp
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production' # Force it to Production to avoid Slot 404 errors
     permissions:
       id-token: write
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: webapp
-          path: ./deploy-package
+          name: app
 
-      - name: Login to Azure
+      - name: Azure login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2A8C5A005C1B4F948532F6AE0FF83828 }}
@@ -59,4 +57,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'musicostore'
-          package: ./deploy-package
+          package: .
