@@ -18,10 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: '10.x'
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
@@ -60,7 +60,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'musicostore'
-          slot-name: 'Production'
           package: .
 
           
+
