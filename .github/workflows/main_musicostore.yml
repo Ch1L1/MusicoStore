@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to Azure Web App - musicostore
+name: Build and deploy .NET Core app to Azure Web App - musicostore
 
 on:
   push:
@@ -9,41 +9,44 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET
+      - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '8.0.x' # Ensure this matches your project (e.g., 6.0, 7.0, or 8.0)
 
-      - name: Build solution
-        run: dotnet build MusicoStore.sln -c Release
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Publish WebMVC
-        run: dotnet publish src/MusicoStore.WebMVC/MusicoStore.WebMVC.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Upload artifact
+      - name: Publish
+        run: dotnet publish src/MusicoStore.WebMVC/MusicoStore.WebMVC.csproj -c Release -o ./publish
+
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: webapp
+          path: ./publish
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    environment:
+      name: 'Production' # Force it to Production to avoid Slot 404 errors
     permissions:
       id-token: write
       contents: read
 
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: app
+          name: webapp
+          path: ./deploy-package
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -56,4 +59,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'musicostore'
-          package: .
+          package: ./deploy-package
